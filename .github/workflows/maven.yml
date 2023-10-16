@@ -20,6 +20,7 @@ jobs:
       DB_USERNAME: ${{ secrets.DB_USERNAME }}
       DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
       DB_URL: ${{ secrets.DB_URL }}
+      HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
     
     permissions:
       contents: read
@@ -34,6 +35,19 @@ jobs:
         distribution: 'temurin'
         server-id: github # Value of the distributionManagement/repository/id field of the pom.xml
         settings-path: ${{ github.workspace }} # location for the settings.xml file
+        
+    - name: Set up Heroku CLI
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.x'
+
+    - name: Install Heroku CLI
+      run: |
+          curl https://cli-assets.heroku.com/install.sh | sh
+
+    - name: Connect to Heroku
+      run: |
+          heroku login -i
 
     - name: Build with Maven
       run: mvn -B package --file pom.xml
