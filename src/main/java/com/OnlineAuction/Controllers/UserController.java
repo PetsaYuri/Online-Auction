@@ -24,6 +24,11 @@ public class UserController {
         this.userServices = userServices;
     }
 
+    @GetMapping("/init")
+    public String init() {
+        return "CI/CD enabled";
+    }
+
     @GetMapping
     public List<User> getUsers() {
         return userServices.getAll();
