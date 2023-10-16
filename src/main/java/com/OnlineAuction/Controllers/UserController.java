@@ -26,7 +26,7 @@ public class UserController {
 
     @GetMapping("/init")
     public String init() {
-        return "CI/CD deploy now????";
+        return "CI/CD deploy now???? And now?";
     }
 
     @GetMapping
