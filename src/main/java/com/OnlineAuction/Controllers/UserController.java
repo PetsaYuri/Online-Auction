@@ -26,7 +26,7 @@ public class UserController {
 
     @GetMapping("/init")
     public String init() {
-        return "CI/CD enabled";
+        return "CI/CD disabled";
     }
 
     @GetMapping
