@@ -48,6 +48,8 @@ jobs:
     - name: Connect to Heroku
       run: |
           heroku login -i
+      env:
+        HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
 
     - name: Build with Maven
       run: mvn -B package --file pom.xml
