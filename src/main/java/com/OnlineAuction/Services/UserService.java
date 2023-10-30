@@ -2,6 +2,7 @@ package com.OnlineAuction.Services;
 
 import com.OnlineAuction.DTO.UserDTO;
 import com.OnlineAuction.Exceptions.Users.EmailAlreadyUsesException;
+import com.OnlineAuction.Models.HistoryOfPrice;
 import com.OnlineAuction.Models.User;
 import com.OnlineAuction.Repositories.UsersRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,12 +12,12 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 
 @Service
-public class UserServices {
+public class UserService {
 
     private final UsersRepository usersRepository;
 
     @Autowired
-    public UserServices(UsersRepository usersRepository) {
+    public UserService(UsersRepository usersRepository) {
         this.usersRepository = usersRepository;
     }
 
@@ -75,5 +76,12 @@ public class UserServices {
         User user = usersRepository.getReferenceById(id);
         usersRepository.delete(user);
         return true;
+    }
+
+    public void setHistoryOfPrices(User user, HistoryOfPrice historyOfPrice) {
+        List<HistoryOfPrice> historyOfPricesList = user.getHistoryOfPrices();
+        historyOfPricesList.add(historyOfPrice);
+        user.setHistoryOfPrices(historyOfPricesList);
+        usersRepository.save(user);
     }
 }

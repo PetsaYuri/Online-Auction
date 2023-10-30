@@ -2,36 +2,40 @@ package com.OnlineAuction.Services;
 
 import com.OnlineAuction.DTO.LotDTO;
 import com.OnlineAuction.Exceptions.UnableToGenerateIdException;
+import com.OnlineAuction.Models.Auction;
+import com.OnlineAuction.Models.HistoryOfPrice;
 import com.OnlineAuction.Models.Lot;
 import com.OnlineAuction.Models.User;
 import com.OnlineAuction.Repositories.LotsRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 @Service
-public class LotServices {
+public class LotService {
 
     private final LotsRepository lotsRepository;
 
-    private final UserServices userServices;
+    private final UserService userService;
 
     @Autowired
-    public LotServices(LotsRepository lotsRepository, UserServices userServices) {
+    public LotService(LotsRepository lotsRepository, UserService userService) {
         this.lotsRepository = lotsRepository;
-        this.userServices = userServices;
+        this.userService = userService;
     }
 
     public Long generateId() {
         int count = 0;
         while (count < 100) {
             String uuid = String.format("%06d", new BigInteger(UUID.randomUUID().toString().replace("-", ""), 16));
-            Long id = Long.valueOf(uuid);
+            Long id = Long.valueOf(uuid.substring(0, 10));
             Optional<Lot> lot = lotsRepository.findById(id);
             if (lot.isEmpty()) {
                 return id;
@@ -45,6 +49,16 @@ public class LotServices {
         return lotsRepository.findAll();
     }
 
+    public List<Lot> getLotsWithoutAuction() {
+        List<Lot> lots = new ArrayList<>();
+        for (Lot lot : lotsRepository.findAll()) {
+            if (lot.getAuction() == null) {
+                lots.add(lot);
+            }
+        }
+        return lots;
+    }
+
     public Lot getLotById(Long id) {
         return lotsRepository.getReferenceById(id);
     }
@@ -53,7 +67,7 @@ public class LotServices {
     //public Lot getLotByNameAndAuction() {}
 
     public Lot create(LotDTO lotDTO) {
-        User creator = userServices.getUserByEmail("test");
+        User creator = userService.getUserByEmail("test");
 
         if (creator == null) {
             throw new EntityNotFoundException();
@@ -88,11 +102,24 @@ public class LotServices {
 
     public boolean delete(Long id) {
         Lot lot = lotsRepository.getReferenceById(id);
-        /*if (lot == null) {
-            throw new EntityNotFoundException();
-        }*/
-
         lotsRepository.delete(lot);
         return true;
+    }
+
+    public void setAuction(List<Lot> lots, Auction auction) {
+        List<Lot> updatedList = lots.stream().peek(lot -> lot.setAuction(auction)).toList();
+        lotsRepository.saveAll(updatedList);
+    }
+
+    public Auction unsetAuction(Lot lot) {
+        Auction auction = lot.getAuction();
+        lot.setAuction(null);
+        lotsRepository.save(lot);
+        return auction;
+    }
+
+    public void setHistoryOfPrice(Lot lot, HistoryOfPrice historyOfPrice) {
+        lot.setHistoryOfPrice(historyOfPrice);
+        lotsRepository.save(lot);
     }
 }

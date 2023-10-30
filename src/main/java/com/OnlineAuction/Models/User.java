@@ -1,6 +1,9 @@
 package com.OnlineAuction.Models;
 
 import com.OnlineAuction.DTO.UserDTO;
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import jakarta.persistence.*;
 
 import java.util.ArrayList;
@@ -8,6 +11,8 @@ import java.util.List;
 
 @Entity
 @Table(name = "users")
+@JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class User {
 
     public User() {}
@@ -37,11 +42,14 @@ public class User {
     @Column(nullable = false)
     private boolean isBlocked;
 
-     @OneToMany
+    @OneToMany
     private List<Lot> listOfCreatedLots;
 
     @OneToMany
     private List<Lot> listLotOfWinning;
+
+    @OneToMany
+    private List<HistoryOfPrice> historyOfPrices;
 
     public Long getId() {
         return id;
@@ -121,5 +129,13 @@ public class User {
 
     public void setListLotOfWinning(List<Lot> listLotOfWinning) {
         this.listLotOfWinning = listLotOfWinning;
+    }
+
+    public List<HistoryOfPrice> getHistoryOfPrices() {
+        return historyOfPrices;
+    }
+
+    public void setHistoryOfPrices(List<HistoryOfPrice> historyOfPrices) {
+        this.historyOfPrices = historyOfPrices;
     }
 }

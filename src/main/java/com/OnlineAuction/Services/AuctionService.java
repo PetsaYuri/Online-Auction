@@ -1,0 +1,163 @@
+package com.OnlineAuction.Services;
+
+import com.OnlineAuction.DTO.AuctionDTO;
+import com.OnlineAuction.Exceptions.UnableToGenerateIdException;
+import com.OnlineAuction.Models.Auction;
+import com.OnlineAuction.Models.Lot;
+import com.OnlineAuction.Repositories.AuctionsRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.context.annotation.Primary;
+import org.springframework.stereotype.Service;
+
+import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
+@Service
+public class AuctionService {
+
+    private final AuctionsRepository auctionsRepository;
+
+    private final LotService lotService;
+
+    @Value("${auction.quantity}")
+    private int quantity;
+
+    @Value("${auction.duration}")
+    private int duration;
+
+    @Autowired
+    public AuctionService(AuctionsRepository auctionsRepository, LotService lotService) {
+        this.auctionsRepository = auctionsRepository;
+        this.lotService = lotService;
+    }
+
+    public List<Auction> getAll() {
+        return auctionsRepository.findAll();
+    }
+
+    public Auction getOneById(Long id) {
+        return auctionsRepository.getReferenceById(id);
+    }
+
+    public Long generateId() {
+        int count = 0;
+        while (count < 100) {
+            String uuid = String.format("%06d", new BigInteger(UUID.randomUUID().toString().replace("-", ""), 16));
+            Long id = Long.valueOf(uuid.substring(0, 10));
+            Optional<Auction> auction = auctionsRepository.findById(id);
+            if (auction.isEmpty()) {
+                return id;
+            }
+            count++;
+        }
+        throw new UnableToGenerateIdException();
+    }
+
+    public Auction create(AuctionDTO auctionDTO) {
+        Long id = generateId();
+
+        if (!auctionDTO.lots().isEmpty()) {
+            for (Lot lot : auctionDTO.lots()) {
+                lot = lotService.getLotById(lot.getId());
+
+                if (lot.getAuction() != null) {
+                    List<Lot> updatedLots = lot.getAuction().getLots();
+                    updatedLots.remove(lot);
+                    lot.getAuction().setLots(updatedLots);
+                    auctionsRepository.save(lot.getAuction());
+                    Auction auction = lotService.unsetAuction(lot);
+
+                    if (auction.getLots().isEmpty()) {
+                        auctionsRepository.delete(auction);
+                    }
+                }
+            }
+        }
+
+        Auction newAuction = new Auction(id, auctionDTO);
+        return auctionsRepository.save(newAuction);
+    }
+
+    public Auction autoCreate() {
+        if (lotService.getLots().size() >= quantity) {
+            Long id = generateId();
+            List<Lot> lots = lotService.getLotsWithoutAuction().subList(0, quantity);
+            String description = fillingDescription(lots);
+            Auction newAuction = new Auction(id, description, lots, duration);
+            auctionsRepository.save(newAuction);
+            lotService.setAuction(lots, newAuction);
+            return newAuction;
+        }
+        throw new RuntimeException();
+    }
+
+    public Auction update(Long idAuction, AuctionDTO auctionDTO) {
+        Auction existAuction = auctionsRepository.getReferenceById(idAuction);
+
+        if (auctionDTO.title() != null && !existAuction.getTitle().equals(auctionDTO.title())) {
+            existAuction.setTitle(auctionDTO.title());
+        }
+
+        if (auctionDTO.description() != null && !existAuction.getDescription().equals(auctionDTO.description())) {
+            existAuction.setDescription(auctionDTO.description());
+        }
+
+        if (auctionDTO.lots() != null) {
+            for (Lot lot : existAuction.getLots()) {
+                if (auctionDTO.lots().contains(lot)) {
+                    continue;
+                }
+
+                lotService.unsetAuction(lot);
+            }
+
+            List<Lot> receivedLots = new ArrayList<>();
+
+            for (Lot lot : auctionDTO.lots()) {
+                Lot recLot = lotService.getLotById(lot.getId());
+                if (auctionDTO.lots().contains(recLot)) {
+                    continue;
+                }
+
+                lotService.unsetAuction(recLot);
+                receivedLots.add(recLot);
+            }
+
+            existAuction.setLots(receivedLots);
+            lotService.setAuction(receivedLots, existAuction);
+        }
+
+        return auctionsRepository.save(existAuction);
+    }
+
+    public boolean delete(Long id) {
+        Auction auction = auctionsRepository.getReferenceById(id);
+        auctionsRepository.delete(auction);
+        return true;
+    }
+
+    public int getQuantity() {
+        return quantity;
+    }
+
+    public String fillingDescription(List<Lot> lots) {
+        String description = "Items: ";
+        for (Lot lot : lots) {
+            description += lot.getName() + ", ";
+        }
+        StringBuilder stringBuilder = new StringBuilder(description);
+        return stringBuilder.substring(0, description.length() - 1);
+    }
+
+    public static void deleteLotFromAuction(Auction auction, Lot lot) {
+        List<Lot> lots = auction.getLots();
+        lots.remove(lot);
+        auction.setLots(lots);
+
+    }
+}

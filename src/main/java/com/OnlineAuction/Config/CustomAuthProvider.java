@@ -3,28 +3,29 @@ package com.OnlineAuction.Config;
 
 import com.OnlineAuction.Exceptions.Users.UserIsBannedException;
 import com.OnlineAuction.Models.User;
-import com.OnlineAuction.Services.UserServices;
+import com.OnlineAuction.Services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 public class CustomAuthProvider implements AuthenticationProvider {
 
-    private final UserServices userServices;
+    private final UserService userService;
 
     @Autowired
-    public CustomAuthProvider(UserServices userServices) {
-        this.userServices = userServices;
+    public CustomAuthProvider(UserService userService) {
+        this.userService = userService;
     }
 
     @Override
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
-        User user = userServices.getUserByEmail(authentication.getName());
+        User user = userService.getUserByEmail(authentication.getName());
         BCryptPasswordEncoder bCrypt = new BCryptPasswordEncoder();
 
         if (!bCrypt.matches(authentication.getCredentials().toString(), user.getPassword())) {
@@ -40,7 +41,10 @@ public class CustomAuthProvider implements AuthenticationProvider {
                 .password(user.getPassword())
                 .roles("user")
                 .build();
-        return new UsernamePasswordAuthenticationToken(userDetails, user.getPassword(), userDetails.getAuthorities());
+
+        Authentication newAuthentication = new UsernamePasswordAuthenticationToken(userDetails, user.getPassword(), userDetails.getAuthorities());
+        SecurityContextHolder.getContext().setAuthentication(newAuthentication);
+        return newAuthentication;
     }
 
     @Override

@@ -1,10 +1,16 @@
 package com.OnlineAuction.Models;
 
 import com.OnlineAuction.DTO.LotDTO;
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import jakarta.persistence.*;
 
 @Entity
 @Table(name = "lots")
+@JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Lot {
 
     public Lot() {}
@@ -38,7 +44,8 @@ public class Lot {
     @ManyToOne
     private Category category;
 
-    @ManyToOne
+    @ManyToOne(cascade = CascadeType.REMOVE)
+    @JsonIgnore
     private Auction auction;
 
     @ManyToOne
@@ -46,6 +53,9 @@ public class Lot {
 
     @ManyToOne
     private User winner;
+
+    @OneToOne
+    private HistoryOfPrice historyOfPrice;
 
     public Long getId() {
         return id;
@@ -133,5 +143,13 @@ public class Lot {
 
     public void setWinner(User winner) {
         this.winner = winner;
+    }
+
+    public HistoryOfPrice getHistoryOfPrice() {
+        return historyOfPrice;
+    }
+
+    public void setHistoryOfPrice(HistoryOfPrice historyOfPrice) {
+        this.historyOfPrice = historyOfPrice;
     }
 }
