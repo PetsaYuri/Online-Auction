@@ -118,8 +118,22 @@ public class LotService {
         return auction;
     }
 
+    public void setCurrentPrice(Lot lot, int current_price) {
+        if (current_price > lot.getCurrent_price()) {
+            lot.setCurrent_price(current_price);
+            lotsRepository.save(lot);
+        }   else {
+            throw new RuntimeException();
+        }
+    }
+
     public void setHistoryOfPrice(Lot lot, HistoryOfPrice historyOfPrice) {
         lot.setHistoryOfPrice(historyOfPrice);
+        lotsRepository.save(lot);
+    }
+
+    public void unsetHistoryOfPrice(Lot lot) {
+        lot.setHistoryOfPrice(null);
         lotsRepository.save(lot);
     }
 }

@@ -41,6 +41,7 @@ public class HistoryOfPriceService {
             lot = lotService.getLotById(lot.getId());
             HistoryOfPrice newHistory = new HistoryOfPrice(historyDTO, user, lot);
             historiesRepository.save(newHistory);
+            lotService.setCurrentPrice(newHistory.getLot(), newHistory.getPrice());
             lotService.setHistoryOfPrice(newHistory.getLot(), newHistory);
             userService.setHistoryOfPrices(user, newHistory);
             return newHistory;
@@ -53,6 +54,7 @@ public class HistoryOfPriceService {
 
         if (historyDTO.price() != 0 && historyDTO.price() != existHistory.getPrice() && historyDTO.price() > existHistory.getLot().getCurrent_price()) {
             existHistory.setPrice(historyDTO.price());
+            lotService.setCurrentPrice(existHistory.getLot(), historyDTO.price());
         }
 
         return historiesRepository.save(existHistory);
@@ -60,6 +62,8 @@ public class HistoryOfPriceService {
 
     public boolean delete(Long id) {
         HistoryOfPrice history = historiesRepository.getReferenceById(id);
+        lotService.unsetHistoryOfPrice(history.getLot());
+        userService.unsetHistoryOfPrices(history.getUser());
         historiesRepository.delete(history);
         return true;
     }

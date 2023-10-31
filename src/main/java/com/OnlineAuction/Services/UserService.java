@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -82,6 +83,11 @@ public class UserService {
         List<HistoryOfPrice> historyOfPricesList = user.getHistoryOfPrices();
         historyOfPricesList.add(historyOfPrice);
         user.setHistoryOfPrices(historyOfPricesList);
+        usersRepository.save(user);
+    }
+
+    public void unsetHistoryOfPrices(User user) {
+        user.setHistoryOfPrices(new ArrayList<>());
         usersRepository.save(user);
     }
 }
