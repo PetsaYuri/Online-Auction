@@ -1,16 +1,18 @@
 package com.OnlineAuction.Services;
 
 import com.OnlineAuction.DTO.AuctionDTO;
+import com.OnlineAuction.DTO.AuctionPropertiesDTO;
+import com.OnlineAuction.Exceptions.UnableToCreateException;
 import com.OnlineAuction.Exceptions.UnableToGenerateIdException;
 import com.OnlineAuction.Models.Auction;
 import com.OnlineAuction.Models.Lot;
 import com.OnlineAuction.Repositories.AuctionsRepository;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Lazy;
-import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 
+import java.io.*;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
@@ -93,7 +95,7 @@ public class AuctionService {
             lotService.setAuction(lots, newAuction);
             return newAuction;
         }
-        throw new RuntimeException();
+        throw new UnableToCreateException("Unable to create auction. Lots are less than required");
     }
 
     public Auction update(Long idAuction, AuctionDTO auctionDTO) {
@@ -136,13 +138,21 @@ public class AuctionService {
     }
 
     public boolean delete(Long id) {
+        if (!auctionsRepository.existsById(id)) {
+            throw new EntityNotFoundException("Unable to find Auction with id " + id);
+        }
+
         Auction auction = auctionsRepository.getReferenceById(id);
         auctionsRepository.delete(auction);
         return true;
     }
 
-    public int getQuantity() {
-        return quantity;
+    public Auction removeLotFromAuction(Lot lot) {
+        Auction auction = lot.getAuction();
+        List<Lot> lots = auction.getLots();
+        lots.remove(lot);
+        auction.setLots(lots);
+        return auctionsRepository.save(auction);
     }
 
     public String fillingDescription(List<Lot> lots) {
@@ -154,10 +164,84 @@ public class AuctionService {
         return stringBuilder.substring(0, description.length() - 1);
     }
 
-    public static void deleteLotFromAuction(Auction auction, Lot lot) {
-        List<Lot> lots = auction.getLots();
-        lots.remove(lot);
-        auction.setLots(lots);
+    public int getQuantity() {
+        return quantity;
+    }
 
+    public void setQuantity(int quantity) {
+        if (quantity == 0) {
+            throw new NullPointerException("Quantity value is 0");
+        }
+
+        boolean result = changeApplicationProperties("auction.quantity", String.valueOf(quantity));
+        if (result) {
+            this.quantity = quantity;
+        }
+    }
+
+    public int getDuration() {
+        return duration;
+    }
+
+    public void setDuration(int duration) {
+        if (duration == 0) {
+            throw new NullPointerException("Duration value is 0");
+        }
+
+        boolean result = changeApplicationProperties("auction.duration", String.valueOf(duration));
+        if (result) {
+            this.duration = duration;
+        }
+    }
+
+    public boolean changeApplicationProperties(String name, String value) {
+        try {
+            File file = new File( "src/main/resources/application.properties");
+            String[] content = getContentFromFile(file).split(name, 2);
+            String arr[] = content[1].split("\n", 2);
+            String fileEnd = "";
+            if (arr.length > 1)    {
+                fileEnd += arr[1];
+            }
+            fileEnd = fileEnd.isEmpty() ? "" : "\n" + fileEnd;
+            if (file.exists())  {
+                FileWriter fw = new FileWriter(file);
+                fw.write(content[0] + name + "=" + value + fileEnd);
+                fw.flush();
+                fw.close();
+                return true;
+            }
+        }   catch (IOException ex)  {
+            System.out.println(ex.getStackTrace());
+        }
+        return false;
+    }
+
+    public String getContentFromFile(File file)   {
+        String content = "";
+        try {
+            FileReader fileReader = new FileReader(file);
+            int c;
+            while ((c= fileReader.read()) != -1)  {
+                content += (char) c;
+            }
+            fileReader.close();
+        }   catch (FileNotFoundException ex)    {
+            System.out.println("File \"" + file.getName() + "\" not found");
+        }   catch (IOException ex)  {
+            System.out.println("IOException");
+        }
+        return content;
+    }
+
+    public AuctionPropertiesDTO updateAuctionProperties(AuctionPropertiesDTO auctionPropertiesDTO) {
+        if (auctionPropertiesDTO.quantity() != getQuantity()) {
+            setQuantity(auctionPropertiesDTO.quantity());
+        }
+
+        if (auctionPropertiesDTO.duration() != getDuration()) {
+            setDuration(auctionPropertiesDTO.duration());
+        }
+        return new AuctionPropertiesDTO(getQuantity(), getDuration());
     }
 }

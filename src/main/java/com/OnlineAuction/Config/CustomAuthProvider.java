@@ -1,7 +1,7 @@
 package com.OnlineAuction.Config;
 
 
-import com.OnlineAuction.Exceptions.Users.UserIsBannedException;
+import com.OnlineAuction.Exceptions.User.UserIsBannedException;
 import com.OnlineAuction.Models.User;
 import com.OnlineAuction.Services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,7 +13,9 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.stereotype.Component;
 
+@Component
 public class CustomAuthProvider implements AuthenticationProvider {
 
     private final UserService userService;

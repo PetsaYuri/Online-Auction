@@ -1,14 +1,12 @@
 package com.OnlineAuction.Controllers;
 
 import com.OnlineAuction.DTO.AuctionDTO;
+import com.OnlineAuction.DTO.AuctionPropertiesDTO;
 import com.OnlineAuction.Models.Auction;
 import com.OnlineAuction.Services.AuctionService;
-import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.text.SimpleDateFormat;
 import java.util.List;
@@ -36,45 +34,38 @@ public class AuctionController {
 
     @GetMapping("/{id}")
     public AuctionDTO getOneById(@PathVariable("id") Long id) {
-        try {
-            Auction auction = auctionService.getOneById(id);
-            return new AuctionDTO(auction.getId(), auction.getTitle(), auction.getDescription(), 0,
-                    simpleDateFormat.format(auction.getStart()), simpleDateFormat.format(auction.getEnds()), auction.getLots());
-        }   catch (EntityNotFoundException ex) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Auction not found");
-        }
+        Auction auction = auctionService.getOneById(id);
+        return new AuctionDTO(auction.getId(), auction.getTitle(), auction.getDescription(), 0,
+                simpleDateFormat.format(auction.getStart()), simpleDateFormat.format(auction.getEnds()), auction.getLots());
     }
 
     @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
     public AuctionDTO create(@RequestBody AuctionDTO auctionDTO) {
-        try {
-            Auction newAuction = auctionService.create(auctionDTO);
-            return new AuctionDTO(newAuction.getId(), newAuction.getTitle(), newAuction.getDescription(), 0,
-                    simpleDateFormat.format(newAuction.getStart()), simpleDateFormat.format(newAuction.getEnds()), newAuction.getLots());
-        }   catch (DataIntegrityViolationException ex) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "The body is not fully written");
-        }
+        Auction newAuction = auctionService.create(auctionDTO);
+        return new AuctionDTO(newAuction.getId(), newAuction.getTitle(), newAuction.getDescription(), 0,
+                simpleDateFormat.format(newAuction.getStart()), simpleDateFormat.format(newAuction.getEnds()), newAuction.getLots());
     }
 
     @PutMapping("/{id}")
     public AuctionDTO update(@RequestBody AuctionDTO auctionDTO, @PathVariable("id") Long id) {
-        try {
-            Auction updatedAction = auctionService.update(id, auctionDTO);
-            return new AuctionDTO(updatedAction.getId(), updatedAction.getTitle(), updatedAction.getDescription(), 0,
-                    simpleDateFormat.format(updatedAction.getStart()), simpleDateFormat.format(updatedAction.getEnds()), updatedAction.getLots());
-        }   catch (DataIntegrityViolationException ex) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "The body is not fully written");
-        }   catch (EntityNotFoundException ex) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Auction not found");
-        }
+        Auction updatedAction = auctionService.update(id, auctionDTO);
+        return new AuctionDTO(updatedAction.getId(), updatedAction.getTitle(), updatedAction.getDescription(), 0,
+                simpleDateFormat.format(updatedAction.getStart()), simpleDateFormat.format(updatedAction.getEnds()), updatedAction.getLots());
     }
 
     @DeleteMapping("/{id}")
     public boolean delete(@PathVariable("id") Long id) {
-        try {
-            return auctionService.delete(id);
-        }   catch (EntityNotFoundException ex) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Auction not found");
-        }
+        return auctionService.delete(id);
+    }
+
+    @GetMapping("/properties")
+    public AuctionPropertiesDTO getAuctionProperties() {
+        return new AuctionPropertiesDTO(auctionService.getQuantity(), auctionService.getDuration());
+    }
+
+    @PutMapping("/properties")
+    public AuctionPropertiesDTO updateAuctionProperties(@RequestBody AuctionPropertiesDTO auctionPropertiesDTO) {
+        return auctionService.updateAuctionProperties(auctionPropertiesDTO);
     }
 }

@@ -1,10 +1,12 @@
 package com.OnlineAuction.Services;
 
 import com.OnlineAuction.DTO.HistoryOfPriceDTO;
+import com.OnlineAuction.Exceptions.UnableToCreateException;
 import com.OnlineAuction.Models.HistoryOfPrice;
 import com.OnlineAuction.Models.Lot;
 import com.OnlineAuction.Models.User;
 import com.OnlineAuction.Repositories.HistoriesOfPricesRepository;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -36,9 +38,9 @@ public class HistoryOfPriceService {
 
     public HistoryOfPrice add(HistoryOfPriceDTO historyDTO, Lot lot) {
         User user = userService.getOne(1L);
+        lot = lotService.getLotById(lot.getId());
 
         if (historyDTO.price() > lot.getCurrent_price()) {
-            lot = lotService.getLotById(lot.getId());
             HistoryOfPrice newHistory = new HistoryOfPrice(historyDTO, user, lot);
             historiesRepository.save(newHistory);
             lotService.setCurrentPrice(newHistory.getLot(), newHistory.getPrice());
@@ -46,7 +48,7 @@ public class HistoryOfPriceService {
             userService.setHistoryOfPrices(user, newHistory);
             return newHistory;
         }
-        throw new RuntimeException();
+        throw new UnableToCreateException("Unable to create bet. Price is lower than current price");
     }
 
     public HistoryOfPrice update(HistoryOfPriceDTO historyDTO, Long id) {
@@ -61,10 +63,20 @@ public class HistoryOfPriceService {
     }
 
     public boolean delete(Long id) {
+        if (!historiesRepository.existsById(id)) {
+            throw new EntityNotFoundException("Unable to find History of price with id " + id);
+        }
+
         HistoryOfPrice history = historiesRepository.getReferenceById(id);
         lotService.unsetHistoryOfPrice(history.getLot());
         userService.unsetHistoryOfPrices(history.getUser());
         historiesRepository.delete(history);
         return true;
+    }
+
+    public void deleteLotFromHistoryOfPrice(Lot lot) {
+        HistoryOfPrice history = lot.getHistoryOfPrice();
+        history.setLot(null);
+        historiesRepository.save(history);
     }
 }

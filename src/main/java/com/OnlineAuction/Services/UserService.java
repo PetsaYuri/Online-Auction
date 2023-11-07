@@ -1,10 +1,11 @@
 package com.OnlineAuction.Services;
 
 import com.OnlineAuction.DTO.UserDTO;
-import com.OnlineAuction.Exceptions.Users.EmailAlreadyUsesException;
+import com.OnlineAuction.Exceptions.User.EmailAlreadyUsesException;
 import com.OnlineAuction.Models.HistoryOfPrice;
 import com.OnlineAuction.Models.User;
 import com.OnlineAuction.Repositories.UsersRepository;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -40,8 +41,7 @@ public class UserService {
             BCryptPasswordEncoder bCrypt = new BCryptPasswordEncoder();
             String encodedPass = bCrypt.encode(userDTO.password());
             User newUser = new User(userDTO, encodedPass);
-            User savedUser = usersRepository.save(newUser);
-            return savedUser;
+            return usersRepository.save(newUser);
         }
         throw new EmailAlreadyUsesException();
     }
@@ -74,6 +74,10 @@ public class UserService {
     }
 
     public boolean delete(Long id) {
+        if (!usersRepository.existsById(id)) {
+            throw new EntityNotFoundException("Unable to find User with id " + id);
+        }
+
         User user = usersRepository.getReferenceById(id);
         usersRepository.delete(user);
         return true;

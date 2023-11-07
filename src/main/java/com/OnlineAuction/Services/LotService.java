@@ -25,10 +25,16 @@ public class LotService {
 
     private final UserService userService;
 
+    private final AuctionService auctionService;
+
+    private final HistoryOfPriceService historyOfPriceService;
+
     @Autowired
-    public LotService(LotsRepository lotsRepository, UserService userService) {
+    public LotService(LotsRepository lotsRepository, UserService userService, @Lazy AuctionService auctionService, @Lazy HistoryOfPriceService historyOfPriceService) {
         this.lotsRepository = lotsRepository;
         this.userService = userService;
+        this.auctionService = auctionService;
+        this.historyOfPriceService = historyOfPriceService;
     }
 
     public Long generateId() {
@@ -75,7 +81,13 @@ public class LotService {
 
         Long id = generateId();
         Lot newLot = new Lot(id, lotDTO, creator);
-        return lotsRepository.save(newLot);
+        Lot savedLot = lotsRepository.save(newLot);
+
+        if (getLotsWithoutAuction().size() >= auctionService.getQuantity()) {
+            auctionService.autoCreate();
+        }
+
+        return savedLot;
     }
 
     public Lot update(LotDTO lotDTO, Long id_lot) {
@@ -101,8 +113,26 @@ public class LotService {
     }
 
     public boolean delete(Long id) {
+        if (!lotsRepository.existsById(id)) {
+            throw new EntityNotFoundException("Unable to find Lot with id " + id);
+        }
+
         Lot lot = lotsRepository.getReferenceById(id);
+        Auction auction = lot.getAuction();
+
+        if (auction != null) {
+            auction = auctionService.removeLotFromAuction(lot);
+        }
+
+        if (lot.getHistoryOfPrice() != null) {
+            historyOfPriceService.deleteLotFromHistoryOfPrice(lot);
+        }
+
         lotsRepository.delete(lot);
+
+        if (auction.getLots().isEmpty()) {
+            auctionService.delete(auction.getId());
+        }
         return true;
     }
 

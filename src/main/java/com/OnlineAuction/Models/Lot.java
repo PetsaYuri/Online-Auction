@@ -44,7 +44,7 @@ public class Lot {
     @ManyToOne
     private Category category;
 
-    @ManyToOne(cascade = CascadeType.REMOVE)
+    @ManyToOne
     @JsonIgnore
     private Auction auction;
 
