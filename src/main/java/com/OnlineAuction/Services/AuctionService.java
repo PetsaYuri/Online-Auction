@@ -5,6 +5,7 @@ import com.OnlineAuction.DTO.AuctionPropertiesDTO;
 import com.OnlineAuction.Exceptions.UnableToCreateException;
 import com.OnlineAuction.Exceptions.UnableToGenerateIdException;
 import com.OnlineAuction.Models.Auction;
+import com.OnlineAuction.Models.HistoryOfPrice;
 import com.OnlineAuction.Models.Lot;
 import com.OnlineAuction.Repositories.AuctionsRepository;
 import jakarta.persistence.EntityNotFoundException;

@@ -1,11 +1,9 @@
 package com.OnlineAuction.Services;
 
+import com.OnlineAuction.DTO.HistoryOfPriceDTO;
 import com.OnlineAuction.DTO.LotDTO;
 import com.OnlineAuction.Exceptions.UnableToGenerateIdException;
-import com.OnlineAuction.Models.Auction;
-import com.OnlineAuction.Models.HistoryOfPrice;
-import com.OnlineAuction.Models.Lot;
-import com.OnlineAuction.Models.User;
+import com.OnlineAuction.Models.*;
 import com.OnlineAuction.Repositories.LotsRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,12 +27,16 @@ public class LotService {
 
     private final HistoryOfPriceService historyOfPriceService;
 
+    private final CategoryService categoryService;
+
     @Autowired
-    public LotService(LotsRepository lotsRepository, UserService userService, @Lazy AuctionService auctionService, @Lazy HistoryOfPriceService historyOfPriceService) {
+    public LotService(LotsRepository lotsRepository, UserService userService, @Lazy AuctionService auctionService,
+                      @Lazy HistoryOfPriceService historyOfPriceService, @Lazy CategoryService categoryService) {
         this.lotsRepository = lotsRepository;
         this.userService = userService;
         this.auctionService = auctionService;
         this.historyOfPriceService = historyOfPriceService;
+        this.categoryService = categoryService;
     }
 
     public Long generateId() {
@@ -82,6 +84,7 @@ public class LotService {
         Long id = generateId();
         Lot newLot = new Lot(id, lotDTO, creator);
         Lot savedLot = lotsRepository.save(newLot);
+        categoryService.addLotToCategory(savedLot);
 
         if (getLotsWithoutAuction().size() >= auctionService.getQuantity()) {
             auctionService.autoCreate();
@@ -109,6 +112,13 @@ public class LotService {
             existLot.setMinimum_price(lotDTO.minimum_price());
         }
 
+        if (lotDTO.category() != null && lotDTO.category() != existLot.getCategory()) {
+            Category category = categoryService.getOne(lotDTO.category().getId());
+            categoryService.unsetLotFromCategory(existLot);
+            existLot.setCategory(category);
+            categoryService.addLotToCategory(existLot);
+        }
+
         return lotsRepository.save(existLot);
     }
 
@@ -124,15 +134,22 @@ public class LotService {
             auction = auctionService.removeLotFromAuction(lot);
         }
 
+        if (lot.getCategory() != null) {
+            categoryService.unsetLotFromCategory(lot);
+        }
+
         if (lot.getHistoryOfPrice() != null) {
             historyOfPriceService.deleteLotFromHistoryOfPrice(lot);
         }
 
         lotsRepository.delete(lot);
 
-        if (auction.getLots().isEmpty()) {
-            auctionService.delete(auction.getId());
+        if (auction != null) {
+            if (auction.getLots().isEmpty()) {
+                auctionService.delete(auction.getId());
+            }
         }
+
         return true;
     }
 
@@ -165,5 +182,9 @@ public class LotService {
     public void unsetHistoryOfPrice(Lot lot) {
         lot.setHistoryOfPrice(null);
         lotsRepository.save(lot);
+    }
+
+    public HistoryOfPrice makeBet(HistoryOfPriceDTO historyOfPriceDTO, Long idLot) {
+        return historyOfPriceService.add(historyOfPriceDTO, idLot);
     }
 }

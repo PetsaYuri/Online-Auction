@@ -36,9 +36,9 @@ public class HistoryOfPriceService {
         return historiesRepository.findAll();
     }
 
-    public HistoryOfPrice add(HistoryOfPriceDTO historyDTO, Lot lot) {
+    public HistoryOfPrice add(HistoryOfPriceDTO historyDTO, Long id) {
         User user = userService.getOne(1L);
-        lot = lotService.getLotById(lot.getId());
+        Lot lot = lotService.getLotById(id);
 
         if (historyDTO.price() > lot.getCurrent_price()) {
             HistoryOfPrice newHistory = new HistoryOfPrice(historyDTO, user, lot);

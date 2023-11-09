@@ -23,7 +23,7 @@ public class Lot {
         minimum_price = lotDTO.minimum_price();
         current_price = minimum_price;
         isAvailable = true;
-        category = null;
+        category = lotDTO.category();
         auction = null;
         this.creator = creator;
         winner = null;
@@ -41,7 +41,7 @@ public class Lot {
     @Column(nullable = false)
     private boolean isAvailable;
 
-    @ManyToOne
+    @ManyToOne(optional = false)
     private Category category;
 
     @ManyToOne

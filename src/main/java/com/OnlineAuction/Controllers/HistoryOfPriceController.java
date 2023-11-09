@@ -33,7 +33,7 @@ public class HistoryOfPriceController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public HistoryOfPrice add(@RequestBody HistoryOfPriceDTO historyDTO) {
-        return historyService.add(historyDTO, historyDTO.lot());
+        return historyService.add(historyDTO, historyDTO.lot().getId());
     }
 
     @PutMapping("/{id}")
