@@ -1,8 +1,8 @@
 package com.OnlineAuction.Controllers;
 
-import com.OnlineAuction.DTO.HistoryOfPriceDTO;
+import com.OnlineAuction.DTO.BetDTO;
 import com.OnlineAuction.DTO.LotDTO;
-import com.OnlineAuction.Models.HistoryOfPrice;
+import com.OnlineAuction.Models.Bet;
 import com.OnlineAuction.Models.Lot;
 import com.OnlineAuction.Services.LotService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -56,7 +56,7 @@ public class LotController {
     }
 
     @PostMapping("/{idLot}/make_bet")
-    public HistoryOfPrice makeABet(@PathVariable("idLot") Long idLot, @RequestBody HistoryOfPriceDTO historyOfPriceDTO) {
-        return lotService.makeBet(historyOfPriceDTO, idLot);
+    public Bet makeABet(@PathVariable("idLot") Long idLot, @RequestBody BetDTO betDTO) {
+        return lotService.makeBet(betDTO, idLot);
     }
 }

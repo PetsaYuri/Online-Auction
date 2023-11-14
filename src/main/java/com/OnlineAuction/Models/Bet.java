@@ -1,6 +1,6 @@
 package com.OnlineAuction.Models;
 
-import com.OnlineAuction.DTO.HistoryOfPriceDTO;
+import com.OnlineAuction.DTO.BetDTO;
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
@@ -10,17 +10,17 @@ import java.sql.Timestamp;
 import java.util.Calendar;
 
 @Entity
-@Table(name = "histories_of_prices")
+@Table(name = "bets")
 @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
-public class HistoryOfPrice {
+public class Bet {
 
-    public HistoryOfPrice() {}
+    public Bet() {}
 
-    public HistoryOfPrice(HistoryOfPriceDTO historyDTO, User user, Lot lot) {
+    public Bet(BetDTO betDTO, User user, Lot lot) {
         full_name = user.getFirst_name() + " " + user.getLast_name();
         name_lot = lot.getName();
-        price = historyDTO.price();
+        price = betDTO.price();
         date = Timestamp.from(Calendar.getInstance().toInstant());
         this.user = user;
         this.lot = lot;
@@ -42,7 +42,7 @@ public class HistoryOfPrice {
     @ManyToOne
     private User user;
 
-    @OneToOne
+    @ManyToOne
     private Lot lot;
 
     public Long getId() {

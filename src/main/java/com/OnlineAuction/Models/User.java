@@ -42,14 +42,14 @@ public class User {
     @Column(nullable = false)
     private boolean isBlocked;
 
-    @OneToMany
+    @OneToMany(mappedBy = "creator")
     private List<Lot> listOfCreatedLots;
 
-    @OneToMany
+    @OneToMany(mappedBy = "winner", fetch = FetchType.EAGER)
     private List<Lot> listLotOfWinning;
 
     @OneToMany
-    private List<HistoryOfPrice> historyOfPrices;
+    private List<Bet> bets;
 
     public Long getId() {
         return id;
@@ -131,11 +131,11 @@ public class User {
         this.listLotOfWinning = listLotOfWinning;
     }
 
-    public List<HistoryOfPrice> getHistoryOfPrices() {
-        return historyOfPrices;
+    public List<Bet> getBets() {
+        return bets;
     }
 
-    public void setHistoryOfPrices(List<HistoryOfPrice> historyOfPrices) {
-        this.historyOfPrices = historyOfPrices;
+    public void setBets(List<Bet> bets) {
+        this.bets = bets;
     }
 }

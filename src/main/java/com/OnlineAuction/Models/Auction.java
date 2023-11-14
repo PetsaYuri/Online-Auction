@@ -5,6 +5,8 @@ import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import jakarta.persistence.*;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
 
 import java.sql.Timestamp;
 import java.util.ArrayList;
@@ -50,7 +52,7 @@ public class Auction {
     @Column(nullable = false)
     private Timestamp start, ends;
 
-    @OneToMany
+    @OneToMany(fetch = FetchType.EAGER)
     private List<Lot> lots;
 
     @OneToOne

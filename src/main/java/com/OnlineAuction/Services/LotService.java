@@ -1,6 +1,6 @@
 package com.OnlineAuction.Services;
 
-import com.OnlineAuction.DTO.HistoryOfPriceDTO;
+import com.OnlineAuction.DTO.BetDTO;
 import com.OnlineAuction.DTO.LotDTO;
 import com.OnlineAuction.Exceptions.UnableToGenerateIdException;
 import com.OnlineAuction.Models.*;
@@ -25,17 +25,17 @@ public class LotService {
 
     private final AuctionService auctionService;
 
-    private final HistoryOfPriceService historyOfPriceService;
+    private final BetService betService;
 
     private final CategoryService categoryService;
 
     @Autowired
-    public LotService(LotsRepository lotsRepository, UserService userService, @Lazy AuctionService auctionService,
-                      @Lazy HistoryOfPriceService historyOfPriceService, @Lazy CategoryService categoryService) {
+    public LotService(LotsRepository lotsRepository, @Lazy UserService userService, @Lazy AuctionService auctionService,
+                      @Lazy BetService betService, @Lazy CategoryService categoryService) {
         this.lotsRepository = lotsRepository;
         this.userService = userService;
         this.auctionService = auctionService;
-        this.historyOfPriceService = historyOfPriceService;
+        this.betService = betService;
         this.categoryService = categoryService;
     }
 
@@ -138,8 +138,8 @@ public class LotService {
             categoryService.unsetLotFromCategory(lot);
         }
 
-        if (lot.getHistoryOfPrice() != null) {
-            historyOfPriceService.deleteLotFromHistoryOfPrice(lot);
+        if (!lot.getBets().isEmpty()) {
+            betService.deleteLotFromBetsList(lot);
         }
 
         lotsRepository.delete(lot);
@@ -174,17 +174,24 @@ public class LotService {
         }
     }
 
-    public void setHistoryOfPrice(Lot lot, HistoryOfPrice historyOfPrice) {
-        lot.setHistoryOfPrice(historyOfPrice);
+    public void addBet(Lot lot, Bet bet) {
+        List<Bet> bets = lot.getBets();
+        bets.add(bet);
+        lot.setBets(bets);
         lotsRepository.save(lot);
     }
 
-    public void unsetHistoryOfPrice(Lot lot) {
-        lot.setHistoryOfPrice(null);
+    public void removeBet(Lot lot) {
+        lot.setBets(null);
         lotsRepository.save(lot);
     }
 
-    public HistoryOfPrice makeBet(HistoryOfPriceDTO historyOfPriceDTO, Long idLot) {
-        return historyOfPriceService.add(historyOfPriceDTO, idLot);
+    public Bet makeBet(BetDTO betDTO, Long idLot) {
+        return betService.add(betDTO, idLot);
+    }
+
+    public void setWinner(Lot lot, User winner) {
+        lot.setWinner(winner);
+        lotsRepository.save(lot);
     }
 }

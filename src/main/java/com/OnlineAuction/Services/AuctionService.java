@@ -4,21 +4,22 @@ import com.OnlineAuction.DTO.AuctionDTO;
 import com.OnlineAuction.DTO.AuctionPropertiesDTO;
 import com.OnlineAuction.Exceptions.UnableToCreateException;
 import com.OnlineAuction.Exceptions.UnableToGenerateIdException;
-import com.OnlineAuction.Models.Auction;
-import com.OnlineAuction.Models.HistoryOfPrice;
-import com.OnlineAuction.Models.Lot;
+import com.OnlineAuction.Models.*;
 import com.OnlineAuction.Repositories.AuctionsRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.*;
 import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.sql.Timestamp;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
+import java.util.*;
 
 @Service
 public class AuctionService {
@@ -27,6 +28,12 @@ public class AuctionService {
 
     private final LotService lotService;
 
+    private final UserService userService;
+
+    private final ResultOfAuctionService resultOfAuctionService;
+
+    private final BetService betService;
+
     @Value("${auction.quantity}")
     private int quantity;
 
@@ -34,17 +41,27 @@ public class AuctionService {
     private int duration;
 
     @Autowired
-    public AuctionService(AuctionsRepository auctionsRepository, LotService lotService) {
+    public AuctionService(AuctionsRepository auctionsRepository, LotService lotService, UserService userService,
+                          ResultOfAuctionService resultOfAuctionService, BetService betService) {
         this.auctionsRepository = auctionsRepository;
         this.lotService = lotService;
+        this.userService = userService;
+        this.resultOfAuctionService = resultOfAuctionService;
+        this.betService = betService;
+        checkAuctions();
     }
 
     public List<Auction> getAll() {
         return auctionsRepository.findAll();
     }
 
+    @Transactional
     public Auction getOneById(Long id) {
         return auctionsRepository.getReferenceById(id);
+    }
+
+    public List<Auction> getAuctionListWithoutResult() {
+        return auctionsRepository.findByResultOfAuction(null);
     }
 
     public Long generateId() {
@@ -94,6 +111,7 @@ public class AuctionService {
             Auction newAuction = new Auction(id, description, lots, duration);
             auctionsRepository.save(newAuction);
             lotService.setAuction(lots, newAuction);
+            setTimer(newAuction);
             return newAuction;
         }
         throw new UnableToCreateException("Unable to create auction. Lots are less than required");
@@ -244,5 +262,57 @@ public class AuctionService {
             setDuration(auctionPropertiesDTO.duration());
         }
         return new AuctionPropertiesDTO(getQuantity(), getDuration());
+    }
+
+    public void setTimer(Auction auction) {
+        Instant currentInstant = Instant.ofEpochMilli(System.currentTimeMillis());
+        long time = ChronoUnit.MILLIS.between(currentInstant, auction.getEnds().toInstant());
+        TimerTask timerTask = new CreatingResultOfAuction(auction);
+        Timer timer = new Timer();
+        timer.schedule(timerTask, time);
+    }
+
+    public class CreatingResultOfAuction extends TimerTask {
+
+        private final Auction auction;
+
+        public CreatingResultOfAuction(Auction auction) {
+            this.auction = auction;
+        }
+
+        @Override
+        public void run() {
+            performResultsOfAuction(auction);
+        }
+    }
+
+    public void performResultsOfAuction(Auction auction) {
+        List<Lot> lots = auction.getLots();
+        for (Lot lot : lots) {
+            List<Bet> bets = betService.getBetsByLot(lot);
+            if (bets.isEmpty()) {
+                continue;
+            }
+
+            Bet lastBet = bets.get(bets.size() - 1);
+            User winner = lastBet.getUser();
+            lotService.setWinner(lot, winner);
+            userService.addLotToListLotsOfWinning(winner, lot);
+        }
+
+        resultOfAuctionService.create(auction.getId());
+    }
+
+    public void checkAuctions() {
+        if (!auctionsRepository.findAll().isEmpty()) {
+            List<Auction> auctions = getAuctionListWithoutResult();
+            for (Auction auction : auctions) {
+                if (new Date().toInstant().isBefore(auction.getEnds().toInstant())) {
+                    setTimer(auction);
+                }   else {
+                    performResultsOfAuction(auction);
+                }
+            }
+        }
     }
 }

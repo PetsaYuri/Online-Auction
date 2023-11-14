@@ -2,5 +2,5 @@ package com.OnlineAuction.DTO;
 
 import com.OnlineAuction.Models.Lot;
 
-public record HistoryOfPriceDTO(int price, Lot lot) {
+public record BetDTO(int price, Lot lot) {
 }

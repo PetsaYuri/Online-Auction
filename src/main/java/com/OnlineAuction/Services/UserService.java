@@ -2,11 +2,13 @@ package com.OnlineAuction.Services;
 
 import com.OnlineAuction.DTO.UserDTO;
 import com.OnlineAuction.Exceptions.User.EmailAlreadyUsesException;
-import com.OnlineAuction.Models.HistoryOfPrice;
+import com.OnlineAuction.Models.Bet;
+import com.OnlineAuction.Models.Lot;
 import com.OnlineAuction.Models.User;
 import com.OnlineAuction.Repositories.UsersRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -18,9 +20,11 @@ public class UserService {
 
     private final UsersRepository usersRepository;
 
+    private final LotService lotService;
     @Autowired
-    public UserService(UsersRepository usersRepository) {
+    public UserService(UsersRepository usersRepository, LotService lotService) {
         this.usersRepository = usersRepository;
+        this.lotService = lotService;
     }
 
     public List<User> getAll() {
@@ -83,15 +87,29 @@ public class UserService {
         return true;
     }
 
-    public void setHistoryOfPrices(User user, HistoryOfPrice historyOfPrice) {
-        List<HistoryOfPrice> historyOfPricesList = user.getHistoryOfPrices();
-        historyOfPricesList.add(historyOfPrice);
-        user.setHistoryOfPrices(historyOfPricesList);
+    public void addBet(User user, Bet bet) {
+        List<Bet> betOfPricesList = user.getBets();
+        betOfPricesList.add(bet);
+        user.setBets(betOfPricesList);
         usersRepository.save(user);
     }
 
-    public void unsetHistoryOfPrices(User user) {
-        user.setHistoryOfPrices(new ArrayList<>());
+    public void deleteBet(User user) {
+        user.setBets(new ArrayList<>());
+        usersRepository.save(user);
+    }
+
+    public void addLotToListLotsOfWinning(User user, Lot lot) {
+        List<Lot> listLotsOfWinning = user.getListLotOfWinning();
+        listLotsOfWinning.add(lot);
+        user.setListLotOfWinning(listLotsOfWinning);
+        usersRepository.save(user);
+    }
+
+    public void removeLotFromListLotsOfWinning(User user, Lot lot) {
+        List<Lot> listLotOfWinning = user.getListLotOfWinning();
+        listLotOfWinning.remove(lot);
+        user.setListLotOfWinning(listLotOfWinning);
         usersRepository.save(user);
     }
 }

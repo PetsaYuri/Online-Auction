@@ -2,11 +2,10 @@ package com.OnlineAuction.Controllers;
 
 import com.OnlineAuction.DTO.AuctionDTO;
 import com.OnlineAuction.DTO.AuctionPropertiesDTO;
-import com.OnlineAuction.DTO.HistoryOfPriceDTO;
 import com.OnlineAuction.Models.Auction;
-import com.OnlineAuction.Models.HistoryOfPrice;
 import com.OnlineAuction.Services.AuctionService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 

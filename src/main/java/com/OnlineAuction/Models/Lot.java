@@ -7,6 +7,8 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import jakarta.persistence.*;
 
+import java.util.List;
+
 @Entity
 @Table(name = "lots")
 @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
@@ -54,8 +56,8 @@ public class Lot {
     @ManyToOne
     private User winner;
 
-    @OneToOne
-    private HistoryOfPrice historyOfPrice;
+    @OneToMany
+    private List<Bet> bets;
 
     public Long getId() {
         return id;
@@ -145,11 +147,11 @@ public class Lot {
         this.winner = winner;
     }
 
-    public HistoryOfPrice getHistoryOfPrice() {
-        return historyOfPrice;
+    public List<Bet> getBets() {
+        return bets;
     }
 
-    public void setHistoryOfPrice(HistoryOfPrice historyOfPrice) {
-        this.historyOfPrice = historyOfPrice;
+    public void setBets(List<Bet> bets) {
+        this.bets = bets;
     }
 }
