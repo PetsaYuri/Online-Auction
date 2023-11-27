@@ -6,7 +6,6 @@ import com.OnlineAuction.Models.ResultOfAuction;
 import com.OnlineAuction.Repositories.ResultsOfAuctionsRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -51,15 +50,15 @@ public class ResultOfAuctionService {
         if (resultOfActionDTO.auction().getId() != null &&)
     }*/
 
-    //need to update
     public boolean delete(Long id) {
-        if (!resultsOfAuctionsRepository.existsById(id)) {
-            throw new EntityNotFoundException();
-        }
-
         ResultOfAuction resultOfAuction = resultsOfAuctionsRepository.getReferenceById(id);
-        auctionResultService.unsetResultOfAuction(resultOfAuction.getAuction());
+        auctionResultService.removeResultOfAuction(resultOfAuction.getAuction());
         resultsOfAuctionsRepository.delete(resultOfAuction);
         return true;
+    }
+
+    public void removeResultFromAuction(ResultOfAuction resultOfAuction) {
+        resultOfAuction.setAuction(null);
+        resultsOfAuctionsRepository.save(resultOfAuction);
     }
 }

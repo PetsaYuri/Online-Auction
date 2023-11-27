@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.context.request.WebRequest;
+import org.springframework.web.multipart.MultipartException;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
 import java.time.LocalDateTime;
@@ -40,6 +41,14 @@ public class ControllerAdvisor extends ResponseEntityExceptionHandler {
     @ExceptionHandler(NullPointerException.class)
     protected ResponseEntity<ErrorResponseDTO> handlingNullPointerException(RuntimeException ex, WebRequest request) {
         String error = "Null pointer";
+        String message = ex.getMessage();
+        String path = request.getDescription(false).replaceAll("uri=", "");
+        return ResponseEntity.badRequest().body(new ErrorResponseDTO(LocalDateTime.now(), HttpStatus.BAD_REQUEST.value(), error, message, path));
+    }
+
+    @ExceptionHandler(MultipartException.class)
+    protected ResponseEntity<ErrorResponseDTO> handlingMultipartException(RuntimeException ex, WebRequest request) {
+        String error = "Multipart";
         String message = ex.getMessage();
         String path = request.getDescription(false).replaceAll("uri=", "");
         return ResponseEntity.badRequest().body(new ErrorResponseDTO(LocalDateTime.now(), HttpStatus.BAD_REQUEST.value(), error, message, path));

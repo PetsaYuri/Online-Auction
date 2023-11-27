@@ -24,7 +24,7 @@ public class Lot {
         image = lotDTO.image();
         minimum_price = lotDTO.minimum_price();
         current_price = minimum_price;
-        isAvailable = true;
+        isAvailable = false;
         category = lotDTO.category();
         auction = null;
         this.creator = creator;
@@ -50,7 +50,7 @@ public class Lot {
     @JsonIgnore
     private Auction auction;
 
-    @ManyToOne
+    @ManyToOne(optional = false)
     private User creator;
 
     @ManyToOne

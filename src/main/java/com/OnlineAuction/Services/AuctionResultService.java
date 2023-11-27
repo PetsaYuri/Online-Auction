@@ -26,7 +26,7 @@ public class AuctionResultService {
         auctionsRepository.save(auction);
     }
 
-    public void unsetResultOfAuction(Auction auction) {
+    public void removeResultOfAuction(Auction auction) {
         auction.setResultOfAuction(null);
         auctionsRepository.save(auction);
     }

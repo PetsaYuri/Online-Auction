@@ -22,11 +22,11 @@ public class User {
         this.last_name = userDTO.last_name();
         this.email = userDTO.email();
         password = encodedPass;
-        this.image = userDTO.image();
         notifications = new ArrayList<>();
         isBlocked = false;
         listOfCreatedLots = new ArrayList<>();
         listLotOfWinning = new ArrayList<>();
+        role = "user";
     }
 
     @Id
@@ -34,7 +34,10 @@ public class User {
     private Long id;
 
     @Column(nullable = false)
-    private String first_name, last_name, email, password, image;
+    private String first_name, last_name, email, password, role;
+
+    @Column
+    private String image;
 
     @Column(nullable = false)
     private List<String> notifications;
@@ -97,6 +100,14 @@ public class User {
 
     public void setImage(String image) {
         this.image = image;
+    }
+
+    public String getRole() {
+        return role;
+    }
+
+    public void setRole(String role) {
+        this.role = role;
     }
 
     public List<String> getNotifications() {

@@ -69,4 +69,9 @@ public class AuctionController {
     public AuctionPropertiesDTO updateAuctionProperties(@RequestBody AuctionPropertiesDTO auctionPropertiesDTO) {
         return auctionService.updateAuctionProperties(auctionPropertiesDTO);
     }
+
+    /*@PostMapping("/{id}/earlyEnd")
+    public Auction earlyEndOfAuction(@PathVariable("id") Long id) {
+
+    }*/
 }

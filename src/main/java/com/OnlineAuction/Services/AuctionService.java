@@ -97,10 +97,16 @@ public class AuctionService {
                     }
                 }
             }
+        }   else {
+            throw new UnableToCreateException("Unable to create the auction. Make sure your body has the lots.");
         }
 
         Auction newAuction = new Auction(id, auctionDTO);
-        return auctionsRepository.save(newAuction);
+        auctionsRepository.save(newAuction);
+        lotService.setAuction(auctionDTO.lots(), newAuction);
+        lotService.setAvailable(auctionDTO.lots(), true);
+        setTimer(newAuction);
+        return newAuction;
     }
 
     public Auction autoCreate() {
@@ -111,6 +117,7 @@ public class AuctionService {
             Auction newAuction = new Auction(id, description, lots, duration);
             auctionsRepository.save(newAuction);
             lotService.setAuction(lots, newAuction);
+            lotService.setAvailable(lots, true);
             setTimer(newAuction);
             return newAuction;
         }
@@ -135,22 +142,28 @@ public class AuctionService {
                 }
 
                 lotService.unsetAuction(lot);
+                lotService.setAvailable(lot, false);
             }
 
             List<Lot> receivedLots = new ArrayList<>();
 
             for (Lot lot : auctionDTO.lots()) {
                 Lot recLot = lotService.getLotById(lot.getId());
-                if (auctionDTO.lots().contains(recLot)) {
+                if (existAuction.getLots().contains(recLot)) {
                     continue;
                 }
 
-                lotService.unsetAuction(recLot);
+                if (recLot.getAuction() != null) {
+                    lotService.unsetAuction(recLot);
+                    lotService.setAvailable(recLot, false);
+                }
+
                 receivedLots.add(recLot);
             }
 
             existAuction.setLots(receivedLots);
             lotService.setAuction(receivedLots, existAuction);
+            lotService.setAvailable(receivedLots, true);
         }
 
         return auctionsRepository.save(existAuction);
@@ -162,6 +175,16 @@ public class AuctionService {
         }
 
         Auction auction = auctionsRepository.getReferenceById(id);
+
+        if (!auction.getLots().isEmpty()) {
+            lotService.removeAuctionFromLotList(auction.getLots());
+            lotService.setAvailable(auction.getLots(), false);
+        }
+
+        if (auction.getResultOfAuction() != null) {
+            resultOfAuctionService.removeResultFromAuction(auction.getResultOfAuction());
+        }
+
         auctionsRepository.delete(auction);
         return true;
     }
@@ -267,6 +290,7 @@ public class AuctionService {
     public void setTimer(Auction auction) {
         Instant currentInstant = Instant.ofEpochMilli(System.currentTimeMillis());
         long time = ChronoUnit.MILLIS.between(currentInstant, auction.getEnds().toInstant());
+     //   long time = 60000 / 2;
         TimerTask timerTask = new CreatingResultOfAuction(auction);
         Timer timer = new Timer();
         timer.schedule(timerTask, time);
@@ -298,6 +322,7 @@ public class AuctionService {
             User winner = lastBet.getUser();
             lotService.setWinner(lot, winner);
             userService.addLotToListLotsOfWinning(winner, lot);
+            lotService.setAvailable(lot, false);
         }
 
         resultOfAuctionService.create(auction.getId());

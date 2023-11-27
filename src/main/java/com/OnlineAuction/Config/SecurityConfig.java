@@ -19,9 +19,9 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.ALWAYS))
                 .authorizeHttpRequests(auth -> auth
-                       // .requestMatchers("/api/auctions/**").authenticated()
+                        .requestMatchers("/api/auctions/**").authenticated()
                         .anyRequest().permitAll())
-               // .logout(logout -> logout.logoutUrl("/api/users/logout"))
+                .logout(logout -> logout.logoutUrl("/logout"))
                 .httpBasic(Customizer.withDefaults())
                 .build();
     }

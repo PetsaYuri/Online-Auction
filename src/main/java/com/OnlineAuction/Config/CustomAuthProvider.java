@@ -4,6 +4,7 @@ package com.OnlineAuction.Config;
 import com.OnlineAuction.Exceptions.User.UserIsBannedException;
 import com.OnlineAuction.Models.User;
 import com.OnlineAuction.Services.UserService;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -30,6 +31,10 @@ public class CustomAuthProvider implements AuthenticationProvider {
         User user = userService.getUserByEmail(authentication.getName());
         BCryptPasswordEncoder bCrypt = new BCryptPasswordEncoder();
 
+        if (user == null) {
+            throw new BadCredentialsException("Email doesn't exist");
+        }
+
         if (!bCrypt.matches(authentication.getCredentials().toString(), user.getPassword())) {
             throw new BadCredentialsException("Password not match");
         }
@@ -41,7 +46,7 @@ public class CustomAuthProvider implements AuthenticationProvider {
         UserDetails userDetails = org.springframework.security.core.userdetails.User.builder()
                 .username(user.getEmail())
                 .password(user.getPassword())
-                .roles("user")
+                .roles(user.getRole())
                 .build();
 
         Authentication newAuthentication = new UsernamePasswordAuthenticationToken(userDetails, user.getPassword(), userDetails.getAuthorities());

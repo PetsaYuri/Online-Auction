@@ -6,8 +6,8 @@ import com.OnlineAuction.Models.Bet;
 import com.OnlineAuction.Models.Lot;
 import com.OnlineAuction.Models.User;
 import com.OnlineAuction.Repositories.BetsRepository;
-import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -22,7 +22,7 @@ public class BetService {
     private final LotService lotService;
 
     @Autowired
-    public BetService(BetsRepository betsRepository, UserService userService, LotService lotService) {
+    public BetService(BetsRepository betsRepository, @Lazy UserService userService, LotService lotService) {
         this.betsRepository = betsRepository;
         this.userService = userService;
         this.lotService = lotService;
@@ -40,12 +40,16 @@ public class BetService {
         User user = userService.getOne(1L);
         Lot lot = lotService.getLotById(id);
 
+        if (!lot.isAvailable()) {
+            throw new UnableToCreateException("Unable to add a bet. The auction has probably ended.");
+        }
+
         if (betDTO.price() > lot.getCurrent_price()) {
             Bet newBet = new Bet(betDTO, user, lot);
             betsRepository.save(newBet);
             lotService.setCurrentPrice(newBet.getLot(), newBet.getPrice());
             lotService.addBet(newBet.getLot(), newBet);
-            userService.addBet(user, newBet);
+            userService.setBetToUser(user, newBet);
             return newBet;
         }
         throw new UnableToCreateException("Unable to create bet. Price is lower than current price");
@@ -53,6 +57,10 @@ public class BetService {
 
     public Bet update(BetDTO betDTO, Long id) {
         Bet existBet = betsRepository.getReferenceById(id);
+
+        if (!existBet.getLot().isAvailable()) {
+            throw new UnableToCreateException("Unable to update the bet. The auction has probably ended.");
+        }
 
         if (betDTO.price() != 0 && betDTO.price() != existBet.getPrice() && betDTO.price() > existBet.getLot().getCurrent_price()) {
             existBet.setPrice(betDTO.price());
@@ -63,23 +71,11 @@ public class BetService {
     }
 
     public boolean delete(Long id) {
-        if (!betsRepository.existsById(id)) {
-            throw new EntityNotFoundException("Unable to find bet with id " + id);
-        }
-
         Bet bet = betsRepository.getReferenceById(id);
         lotService.removeBet(bet.getLot());
-        userService.deleteBet(bet.getUser());
+        userService.removeBetFromUser(bet.getUser());
         betsRepository.delete(bet);
         return true;
-    }
-
-    public void deleteLotFromBetsList(Lot lot) {
-        List<Bet> bets = lot.getBets();
-        bets.stream().peek(bet -> {
-            bet.setLot(null);
-            betsRepository.save(bet);
-        });
     }
 
     public List<Bet> getBetsByLot(Lot lot) {

@@ -71,9 +71,6 @@ public class LotService {
         return lotsRepository.getReferenceById(id);
     }
 
-    //Will be added soon
-    //public Lot getLotByNameAndAuction() {}
-
     public Lot create(LotDTO lotDTO) {
         User creator = userService.getUserByEmail("test");
 
@@ -123,10 +120,6 @@ public class LotService {
     }
 
     public boolean delete(Long id) {
-        if (!lotsRepository.existsById(id)) {
-            throw new EntityNotFoundException("Unable to find Lot with id " + id);
-        }
-
         Lot lot = lotsRepository.getReferenceById(id);
         Auction auction = lot.getAuction();
 
@@ -134,14 +127,19 @@ public class LotService {
             auction = auctionService.removeLotFromAuction(lot);
         }
 
-        if (lot.getCategory() != null) {
-            categoryService.unsetLotFromCategory(lot);
-        }
-
         if (!lot.getBets().isEmpty()) {
-            betService.deleteLotFromBetsList(lot);
+            List<Bet> list = lot.getBets();
+            for (Bet bet : list) {
+                betService.delete(bet.getId());
+            }
         }
 
+        if (lot.getWinner() != null) {
+            userService.removeLotFromListLotsOfWinning(lot);
+        }
+
+        categoryService.unsetLotFromCategory(lot);
+        userService.removeLotFromListOfCreatedLots(lot);
         lotsRepository.delete(lot);
 
         if (auction != null) {
@@ -192,6 +190,30 @@ public class LotService {
 
     public void setWinner(Lot lot, User winner) {
         lot.setWinner(winner);
+        lotsRepository.save(lot);
+    }
+
+    public void removeWinnerFromLot(Lot lot) {
+        lot.setWinner(null);
+        lotsRepository.save(lot);
+    }
+
+    public void removeAuctionFromLotList(List<Lot> lots) {
+        for(Lot lot : lots) {
+            lot.setAuction(null);
+            lotsRepository.save(lot);
+        }
+    }
+
+    public void setAvailable(List<Lot> lots, boolean value) {
+        for (Lot lot : lots) {
+            lot.setAvailable(value);
+        }
+        lotsRepository.saveAll(lots);
+    }
+
+    public void setAvailable(Lot lot, boolean value) {
+        lot.setAvailable(value);
         lotsRepository.save(lot);
     }
 }

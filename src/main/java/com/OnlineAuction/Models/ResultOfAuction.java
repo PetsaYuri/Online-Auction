@@ -33,7 +33,7 @@ public class ResultOfAuction {
     @Column(nullable = false)
     private Timestamp start, ends;
 
-    @OneToOne
+    @OneToOne(optional = false)
     private Auction auction;
 
     public Long getId() {

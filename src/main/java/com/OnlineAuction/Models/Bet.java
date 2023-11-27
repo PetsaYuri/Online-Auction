@@ -39,10 +39,10 @@ public class Bet {
     @Column(nullable = false)
     private Timestamp date;
 
-    @ManyToOne
+    @ManyToOne(optional = false)
     private User user;
 
-    @ManyToOne
+    @ManyToOne(optional = false)
     private Lot lot;
 
     public Long getId() {

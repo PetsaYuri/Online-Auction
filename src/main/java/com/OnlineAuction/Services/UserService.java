@@ -2,15 +2,16 @@ package com.OnlineAuction.Services;
 
 import com.OnlineAuction.DTO.UserDTO;
 import com.OnlineAuction.Exceptions.User.EmailAlreadyUsesException;
+import com.OnlineAuction.Exceptions.User.UserDoesNotHaveAccessException;
 import com.OnlineAuction.Models.Bet;
 import com.OnlineAuction.Models.Lot;
 import com.OnlineAuction.Models.User;
 import com.OnlineAuction.Repositories.UsersRepository;
-import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Lazy;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -21,10 +22,17 @@ public class UserService {
     private final UsersRepository usersRepository;
 
     private final LotService lotService;
+
+    private final BetService betService;
+
+    private final ImageUploadService imageUploadService;
+
     @Autowired
-    public UserService(UsersRepository usersRepository, LotService lotService) {
+    public UserService(UsersRepository usersRepository, LotService lotService, BetService betService, ImageUploadService imageUploadService) {
         this.usersRepository = usersRepository;
         this.lotService = lotService;
+        this.betService = betService;
+        this.imageUploadService = imageUploadService;
     }
 
     public List<User> getAll() {
@@ -70,31 +78,44 @@ public class UserService {
             existUser.setPassword(bCrypt.encode(userDTO.password()));
         }
 
-        if (userDTO.image() != null) {
-            existUser.setImage(userDTO.image());
-        }
-
         return usersRepository.save(existUser);
     }
 
     public boolean delete(Long id) {
-        if (!usersRepository.existsById(id)) {
-            throw new EntityNotFoundException("Unable to find User with id " + id);
+        User user = usersRepository.getReferenceById(id);
+
+        if (!user.getListOfCreatedLots().isEmpty()) {
+            List<Lot> listOfCreatedLots = user.getListOfCreatedLots();
+            for (int i = 0; i < listOfCreatedLots.size(); i++) {
+                lotService.delete(listOfCreatedLots.get(i).getId());
+                i = user.getListOfCreatedLots().size() > 0 ? i - 1 : listOfCreatedLots.size();
+            }
         }
 
-        User user = usersRepository.getReferenceById(id);
+        if (!user.getListLotOfWinning().isEmpty()) {
+            for (Lot lot : user.getListLotOfWinning()) {
+                lotService.removeWinnerFromLot(lot);
+            }
+        }
+
+        if (!user.getBets().isEmpty()) {
+            for (Bet bet : user.getBets()) {
+                betService.delete(bet.getId());
+            }
+        }
+
         usersRepository.delete(user);
         return true;
     }
 
-    public void addBet(User user, Bet bet) {
+    public void setBetToUser(User user, Bet bet) {
         List<Bet> betOfPricesList = user.getBets();
         betOfPricesList.add(bet);
         user.setBets(betOfPricesList);
         usersRepository.save(user);
     }
 
-    public void deleteBet(User user) {
+    public void removeBetFromUser(User user) {
         user.setBets(new ArrayList<>());
         usersRepository.save(user);
     }
@@ -106,10 +127,59 @@ public class UserService {
         usersRepository.save(user);
     }
 
-    public void removeLotFromListLotsOfWinning(User user, Lot lot) {
+    public void removeLotFromListLotsOfWinning(Lot lot) {
+        User user = lot.getWinner();
         List<Lot> listLotOfWinning = user.getListLotOfWinning();
         listLotOfWinning.remove(lot);
         user.setListLotOfWinning(listLotOfWinning);
         usersRepository.save(user);
+    }
+
+    public void removeLotFromListOfCreatedLots(Lot lot) {
+        User user = lot.getCreator();
+        List<Lot> listOfCreatedLots = user.getListOfCreatedLots();
+        listOfCreatedLots.remove(lot);
+        user.setListOfCreatedLots(listOfCreatedLots);
+        usersRepository.save(user);
+    }
+
+    public User setAdminRole(Long idUser) {
+        if (calledByAdmin()) {
+            User user = getOne(idUser);
+            user.setRole("admin");
+            return usersRepository.save(user);
+        }
+        throw new UserDoesNotHaveAccessException();
+    }
+
+    public User removeAdminRole(Long idUser) {
+        if (calledByAdmin()) {
+            User user = getOne(idUser);
+            user.setRole("user");
+            return usersRepository.save(user);
+        }
+        throw new UserDoesNotHaveAccessException();
+    }
+
+    public boolean calledByAdmin() {
+        User user = getUserByEmail(SecurityContextHolder.getContext().getAuthentication().getName());
+        return user.getRole().equals("admin") || user.getRole().equals("owner");
+    }
+
+    public User getUserWhoMadeRequest() {
+        return getUserByEmail(SecurityContextHolder.getContext().getAuthentication().getName());
+    }
+
+    public User setImage(Long idUser, MultipartFile file) {
+        User user = getOne(idUser);
+
+        if (calledByAdmin() || getUserWhoMadeRequest().equals(user)) {
+            String filename = imageUploadService.getUniqueFilename(file.getOriginalFilename() + " ");
+            imageUploadService.saveImage(file, filename);
+            user.setImage(filename);
+            return usersRepository.save(user);
+        }   else {
+            throw new UserDoesNotHaveAccessException();
+        }
     }
 }
