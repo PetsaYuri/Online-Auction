@@ -6,9 +6,13 @@ import com.OnlineAuction.Models.ResultOfAuction;
 import com.OnlineAuction.Repositories.ResultsOfAuctionsRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.sql.Timestamp;
+import java.util.Calendar;
+import java.util.GregorianCalendar;
 import java.util.List;
 
 @Service
@@ -31,8 +35,36 @@ public class ResultOfAuctionService {
         return resultsOfAuctionsRepository.getReferenceById(id);
     }
 
-    public List<ResultOfAuction> getAll() {
-        return resultsOfAuctionsRepository.findAll();
+    public List<ResultOfAuction> getAll(Pageable pageable) {
+        return resultsOfAuctionsRepository.findAll(pageable).toList();
+    }
+
+    public List<ResultOfAuction> getByNameAuction(String name, Pageable pageable) {
+        return resultsOfAuctionsRepository.findByNameAuctionContainsIgnoreCase(name, pageable).toList();
+    }
+
+    public List<ResultOfAuction> getByStartAndEnds(Timestamp start, Timestamp end, Pageable pageable) {
+        return resultsOfAuctionsRepository.findByStartAfterAndEndsBefore(start, end, pageable).toList();
+    }
+
+    public List<ResultOfAuction> getAfterStart(Timestamp start, Pageable pageable) {
+        return resultsOfAuctionsRepository.findByStartAfter(start, pageable).toList();
+    }
+
+    public List<ResultOfAuction> getBeforeEnd(Timestamp end, Pageable pageable) {
+        return resultsOfAuctionsRepository.findByEndsBefore(end, pageable).toList();
+    }
+
+    public List<ResultOfAuction> getByNameAuctionAndStartAndEnds(String name, Timestamp start, Timestamp end, Pageable pageable) {
+        return resultsOfAuctionsRepository.findByNameAuctionContainsIgnoreCaseAndStartAfterAndEndsBefore(name, start, end, pageable).toList();
+    }
+
+    public List<ResultOfAuction> getByNameAuctionAndStart(String name, Timestamp start, Pageable pageable) {
+        return resultsOfAuctionsRepository.findByNameAuctionContainsIgnoreCaseAndStartAfter(name, start, pageable).toList();
+    }
+
+    public List<ResultOfAuction> getByNameAuctionAndEnds(String name, Timestamp end, Pageable pageable) {
+        return resultsOfAuctionsRepository.findByNameAuctionContainsIgnoreCaseAndEndsBefore(name, end, pageable).toList();
     }
 
     @Transactional

@@ -8,6 +8,7 @@ import com.OnlineAuction.Models.Lot;
 import com.OnlineAuction.Models.User;
 import com.OnlineAuction.Repositories.UsersRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -35,8 +36,56 @@ public class UserService {
         this.imageUploadService = imageUploadService;
     }
 
-    public List<User> getAll() {
-        return usersRepository.findAll();
+    public List<User> getAll(Pageable pageable) {
+        return usersRepository.findAll(pageable).toList();
+    }
+
+    public List<User> getByEmail(String email, Pageable pageable) {
+        return usersRepository.findByEmailContainsIgnoreCase(email, pageable).toList();
+    }
+
+    public List<User> getByFirstNameAndLastName(String firstName, String lastName, Pageable pageable) {
+        return usersRepository.findByFirstNameContainsIgnoreCaseAndLastNameContainsIgnoreCase(firstName, lastName, pageable).toList();
+    }
+
+    public List<User> getByLastName(String lastName, Pageable pageable) {
+        return usersRepository.findByLastNameContainsIgnoreCase(lastName, pageable).toList();
+    }
+
+    public List<User> getByBlocked(boolean isBlocked, Pageable pageable) {
+        return usersRepository.findByIsBlocked(isBlocked, pageable).toList();
+    }
+
+    public List<User> getByRole(String role, Pageable pageable) {
+        return usersRepository.findByRole(role, pageable).toList();
+    }
+
+    public List<User> getByFirstNameAndLastNameAndBlockedAndRole(String firstName, String lastName, boolean isBlocked, String role, Pageable pageable) {
+        return usersRepository.findByFirstNameContainsIgnoreCaseAndLastNameContainsIgnoreCaseAndIsBlockedAndRole(firstName, lastName, isBlocked, role, pageable).toList();
+    }
+
+    public List<User> getByLastNameAndBlockedAndRole(String lastName, boolean isBlocked, String role, Pageable pageable) {
+        return usersRepository.findByLastNameContainsIgnoreCaseAndIsBlockedAndRole(lastName, isBlocked, role, pageable).toList();
+    }
+
+    public List<User> getByFirstNameAndLastNameAndBlocked(String firstName, String lastName, boolean isBlocked, Pageable pageable) {
+        return usersRepository.findByFirstNameContainsIgnoreCaseAndLastNameContainsIgnoreCaseAndIsBlocked(firstName, lastName, isBlocked, pageable).toList();
+    }
+
+    public List<User> getByLastNameAndBlocked(String lastName, boolean isBlocked, Pageable pageable) {
+        return usersRepository.findByLastNameContainsIgnoreCaseAndIsBlocked(lastName, isBlocked, pageable).toList();
+    }
+
+    public List<User> getByFirstNameAndLastNameAndRole(String firstName, String lastName, String role, Pageable pageable) {
+        return usersRepository.findByFirstNameContainsIgnoreCaseAndLastNameContainsIgnoreCaseAndRole(firstName, lastName, role, pageable).toList();
+    }
+
+    public List<User> getByLastNameAndRole(String lastName, String role, Pageable pageable) {
+        return usersRepository.findByLastNameContainsIgnoreCaseAndRole(lastName, role, pageable).toList();
+    }
+
+    public List<User> getByBlockedAndRole(boolean isBlocked, String role, Pageable pageable) {
+        return usersRepository.findByIsBlockedAndRole(isBlocked, role, pageable).toList();
     }
 
     public User getOne(Long id) {
@@ -62,11 +111,11 @@ public class UserService {
         User existUser = usersRepository.getReferenceById(id_user);
 
         if (userDTO.first_name() != null) {
-            existUser.setFirst_name(userDTO.first_name());
+            existUser.setFirstName(userDTO.first_name());
         }
 
         if (userDTO.last_name() != null) {
-            existUser.setLast_name(userDTO.last_name());
+            existUser.setLastName(userDTO.last_name());
         }
 
         if (userDTO.email() != null) {

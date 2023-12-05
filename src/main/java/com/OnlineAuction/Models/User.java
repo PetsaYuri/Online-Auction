@@ -18,9 +18,9 @@ public class User {
     public User() {}
 
     public User(UserDTO userDTO, String encodedPass) {
-        this.first_name = userDTO.first_name();
-        this.last_name = userDTO.last_name();
-        this.email = userDTO.email();
+        firstName = userDTO.first_name();
+        lastName = userDTO.last_name();
+        email = userDTO.email();
         password = encodedPass;
         notifications = new ArrayList<>();
         isBlocked = false;
@@ -34,7 +34,13 @@ public class User {
     private Long id;
 
     @Column(nullable = false)
-    private String first_name, last_name, email, password, role;
+    private String email, password, role;
+
+    @Column(name = "first_name", nullable = false)
+    private String firstName;
+
+    @Column(name = "last_name", nullable = false)
+    private String lastName;
 
     @Column
     private String image;
@@ -62,20 +68,20 @@ public class User {
         this.id = id;
     }
 
-    public String getFirst_name() {
-        return first_name;
+    public String getFirstName() {
+        return firstName;
     }
 
-    public void setFirst_name(String first_name) {
-        this.first_name = first_name;
+    public void setFirstName(String firstName) {
+        this.firstName = firstName;
     }
 
-    public String getLast_name() {
-        return last_name;
+    public String getLastName() {
+        return lastName;
     }
 
-    public void setLast_name(String last_name) {
-        this.last_name = last_name;
+    public void setLastName(String lastName) {
+        this.lastName = lastName;
     }
 
     public String getEmail() {

@@ -8,8 +8,13 @@ import com.OnlineAuction.Models.User;
 import com.OnlineAuction.Repositories.BetsRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.sql.Timestamp;
+import java.util.Calendar;
+import java.util.GregorianCalendar;
 import java.util.List;
 
 @Service
@@ -32,8 +37,20 @@ public class BetService {
         return betsRepository.getReferenceById(id);
     }
 
-    public List<Bet> getAll() {
-        return betsRepository.findAll();
+    public List<Bet> getAll(Pageable pageable) {
+        return betsRepository.findAll(pageable).toList();
+    }
+
+    public List<Bet> getAllInBetweenDays(Timestamp start, Timestamp end, Pageable pageable) {
+        return betsRepository.findByDateBetween(start, end, pageable).toList();
+    }
+
+    public List<Bet> getAllBeforeDate(Timestamp date, Pageable pageable) {
+        return betsRepository.findByDateBefore(date, pageable).toList();
+    }
+
+    public List<Bet> getAllAfterDate(Timestamp date, Pageable pageable) {
+        return betsRepository.findByDateAfter(date, pageable).toList();
     }
 
     public Bet add(BetDTO betDTO, Long id) {
@@ -44,7 +61,7 @@ public class BetService {
             throw new UnableToCreateException("Unable to add a bet. The auction has probably ended.");
         }
 
-        if (betDTO.price() > lot.getCurrent_price()) {
+        if (betDTO.price() > lot.getCurrentPrice()) {
             Bet newBet = new Bet(betDTO, user, lot);
             betsRepository.save(newBet);
             lotService.setCurrentPrice(newBet.getLot(), newBet.getPrice());
@@ -62,7 +79,7 @@ public class BetService {
             throw new UnableToCreateException("Unable to update the bet. The auction has probably ended.");
         }
 
-        if (betDTO.price() != 0 && betDTO.price() != existBet.getPrice() && betDTO.price() > existBet.getLot().getCurrent_price()) {
+        if (betDTO.price() != 0 && betDTO.price() != existBet.getPrice() && betDTO.price() > existBet.getLot().getCurrentPrice()) {
             existBet.setPrice(betDTO.price());
             lotService.setCurrentPrice(existBet.getLot(), betDTO.price());
         }

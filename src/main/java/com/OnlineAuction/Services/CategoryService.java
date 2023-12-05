@@ -7,6 +7,7 @@ import com.OnlineAuction.Models.Lot;
 import com.OnlineAuction.Repositories.CategoriesRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -22,8 +23,12 @@ public class CategoryService {
         this.categoriesRepository = categoriesRepository;
     }
 
-    public List<Category> getAll() {
-        return categoriesRepository.findAll();
+    public List<Category> getAll(Pageable pageable) {
+        return categoriesRepository.findAll(pageable).toList();
+    }
+
+    public List<Category> getByTitle(String title, Pageable pageable) {
+        return categoriesRepository.findByTitleContainsIgnoreCase(title, pageable).toList();
     }
 
     public Category getOne(Long id) {

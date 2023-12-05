@@ -4,6 +4,8 @@ import com.OnlineAuction.DTO.CategoryDTO;
 import com.OnlineAuction.Models.Category;
 import com.OnlineAuction.Services.CategoryService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,8 +23,10 @@ public class CategoryController {
     }
 
     @GetMapping
-    public List<Category> getAll() {
-        return categoryService.getAll();
+    public List<Category> getAll(@RequestParam(value = "size", defaultValue = "10") int size, @RequestParam(value = "page", defaultValue = "0") int page,
+                                 @RequestParam(value = "q", required = false) String query) {
+        Pageable pageable = PageRequest.of(page, size);
+        return query != null ? categoryService.getByTitle(query, pageable) : categoryService.getAll(pageable);
     }
 
     @GetMapping("/{id}")

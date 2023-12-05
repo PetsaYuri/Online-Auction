@@ -4,12 +4,17 @@ import com.OnlineAuction.DTO.AuctionDTO;
 import com.OnlineAuction.DTO.AuctionPropertiesDTO;
 import com.OnlineAuction.Models.Auction;
 import com.OnlineAuction.Services.AuctionService;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Lazy;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
+import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
+import java.util.Collections;
+import java.util.Enumeration;
 import java.util.List;
 import java.util.TimeZone;
 
@@ -27,10 +32,54 @@ public class AuctionController {
     }
 
     @GetMapping
-    public List<AuctionDTO> getAll(@RequestHeader(name = "X-Time-Zone", defaultValue = "Europe/Kiev",required = false) String timezone) {
-      //  simpleDateFormat.setTimeZone(TimeZone.getTimeZone(timezone));
-        return auctionService.getAll().stream().map(auction -> new AuctionDTO(auction.getId(), auction.getTitle(), auction.getDescription(), 0,
-               simpleDateFormat.format(auction.getStart()), simpleDateFormat.format(auction.getEnds()), auction.getLots())).toList();
+    public List<AuctionDTO> getAll(@RequestHeader(name = "X-Time-Zone", defaultValue = "Europe/Kiev",required = false) String timezone,
+                                   @RequestParam(name = "size", defaultValue = "10") int size,
+                                   @RequestParam(name = "page", defaultValue = "0") int page,
+                                   @RequestParam(name = "q", required = false) String query,
+                                   @RequestParam(name = "onlyActive", defaultValue = "false") boolean active,
+                                   @RequestParam(name = "date_start", required = false)Timestamp date_start,
+                                   @RequestParam(name = "date_end", required = false) Timestamp date_end) {
+        //  simpleDateFormat.setTimeZone(TimeZone.getTimeZone(timezone));
+        Pageable pageable = PageRequest.of(page, size);
+
+        if (query != null && date_start != null && date_end != null) {
+            return auctionService.getByTitleAndActiveAndStartAndEnd(query, active, date_start, date_end, pageable).stream().map(auction -> new AuctionDTO(auction.getId(),
+                    auction.getTitle(), auction.getDescription(), 0, simpleDateFormat.format(auction.getStart()), simpleDateFormat.format(auction.getEnds()),
+                    auction.getLots())).toList();
+        }
+
+        if (query != null && date_start != null) {
+            return auctionService.getByTitleAndActiveAndStart(query, active, date_start, pageable).stream().map(auction -> new AuctionDTO(auction.getId(),
+                    auction.getTitle(), auction.getDescription(), 0, simpleDateFormat.format(auction.getStart()), simpleDateFormat.format(auction.getEnds()), auction.getLots())).toList();
+        }
+
+        if (query != null && date_end != null) {
+            return auctionService.getByTitleAndActiveAndEnd(query, active, date_end, pageable).stream().map(auction -> new AuctionDTO(auction.getId(), auction.getTitle(), auction.getDescription(),
+                    0, simpleDateFormat.format(auction.getStart()), simpleDateFormat.format(auction.getEnds()), auction.getLots())).toList();
+        }
+
+        if (query != null) {
+            return auctionService.getByTitleAndActive(query, active, pageable).stream().map(auction -> new AuctionDTO(auction.getId(), auction.getTitle(), auction.getDescription(),
+                    0, simpleDateFormat.format(auction.getStart()), simpleDateFormat.format(auction.getEnds()), auction.getLots())).toList();
+        }
+
+        if (date_start != null && date_end != null) {
+            return auctionService.getByStartAndEndAndActive(date_start, date_end, active, pageable).stream().map(auction -> new AuctionDTO(auction.getId(), auction.getTitle(), auction.getDescription(),
+                    0, simpleDateFormat.format(auction.getStart()), simpleDateFormat.format(auction.getEnds()), auction.getLots())).toList();
+        }
+
+        if (date_start != null) {
+            return auctionService.getAfterStartAndActive(date_start, active, pageable).stream().map(auction -> new AuctionDTO(auction.getId(), auction.getTitle(), auction.getDescription(),
+                    0, simpleDateFormat.format(auction.getStart()), simpleDateFormat.format(auction.getEnds()), auction.getLots())).toList();
+        }
+
+        if (date_end != null) {
+            return auctionService.getBeforeEndAndActive(date_end, active, pageable).stream().map(auction -> new AuctionDTO(auction.getId(), auction.getTitle(), auction.getDescription(),
+                    0, simpleDateFormat.format(auction.getStart()), simpleDateFormat.format(auction.getEnds()), auction.getLots())).toList();
+        }
+
+        return auctionService.getByActive(pageable, active).stream().map(auction -> new AuctionDTO(auction.getId(), auction.getTitle(), auction.getDescription(),
+                0, simpleDateFormat.format(auction.getStart()), simpleDateFormat.format(auction.getEnds()), auction.getLots())).toList();
     }
 
     @GetMapping("/{id}")

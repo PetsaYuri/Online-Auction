@@ -22,8 +22,8 @@ public class Lot {
         name = lotDTO.name();
         description = lotDTO.description();
         image = lotDTO.image();
-        minimum_price = lotDTO.minimum_price();
-        current_price = minimum_price;
+        minimumPrice = lotDTO.minimum_price();
+        currentPrice = minimumPrice;
         isAvailable = false;
         category = lotDTO.category();
         auction = null;
@@ -37,8 +37,11 @@ public class Lot {
     @Column(nullable = false)
     private String name, description, image;
 
-    @Column(nullable = false)
-    private int minimum_price, current_price;
+    @Column(name = "minimum_price",nullable = false)
+    private int minimumPrice;
+
+    @Column(name = "current_price",nullable = false)
+    private int currentPrice;
 
     @Column(nullable = false)
     private boolean isAvailable;
@@ -91,20 +94,20 @@ public class Lot {
         this.image = image;
     }
 
-    public int getMinimum_price() {
-        return minimum_price;
+    public int getMinimumPrice() {
+        return minimumPrice;
     }
 
-    public void setMinimum_price(int minimum_price) {
-        this.minimum_price = minimum_price;
+    public void setMinimumPrice(int minimumPrice) {
+        this.minimumPrice = minimumPrice;
     }
 
-    public int getCurrent_price() {
-        return current_price;
+    public int getCurrentPrice() {
+        return currentPrice;
     }
 
-    public void setCurrent_price(int current_price) {
-        this.current_price = current_price;
+    public void setCurrentPrice(int currentPrice) {
+        this.currentPrice = currentPrice;
     }
 
     public boolean isAvailable() {

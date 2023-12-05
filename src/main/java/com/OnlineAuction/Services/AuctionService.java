@@ -4,12 +4,16 @@ import com.OnlineAuction.DTO.AuctionDTO;
 import com.OnlineAuction.DTO.AuctionPropertiesDTO;
 import com.OnlineAuction.Exceptions.UnableToCreateException;
 import com.OnlineAuction.Exceptions.UnableToGenerateIdException;
-import com.OnlineAuction.Models.*;
+import com.OnlineAuction.Models.Auction;
+import com.OnlineAuction.Models.Bet;
+import com.OnlineAuction.Models.Lot;
+import com.OnlineAuction.Models.User;
 import com.OnlineAuction.Repositories.AuctionsRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Lazy;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,7 +21,6 @@ import java.io.*;
 import java.math.BigInteger;
 import java.sql.Timestamp;
 import java.time.Instant;
-import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 
@@ -51,8 +54,60 @@ public class AuctionService {
         checkAuctions();
     }
 
-    public List<Auction> getAll() {
-        return auctionsRepository.findAll();
+    public List<Auction> getByActive(Pageable pageable, boolean active) {
+        if (active) {
+            return auctionsRepository.findByResultOfAuction(null, pageable).toList();
+        }
+        return auctionsRepository.findAll(pageable).toList();
+    }
+
+    public List<Auction> getByTitleAndActiveAndStartAndEnd(String title, boolean active, Timestamp start, Timestamp end, Pageable pageable) {
+        if (active) {
+            return auctionsRepository.findByTitleContainsIgnoreCaseAndResultOfAuctionAndStartAfterAndEndsBefore(title, null, start, end, pageable).toList();
+        }
+        return auctionsRepository.findByTitleContainsIgnoreCaseAndStartAfterAndEndsBefore(title, start, end, pageable).toList();
+    }
+
+    public List<Auction> getByTitleAndActiveAndStart(String title, boolean active, Timestamp start, Pageable pageable) {
+        if (active) {
+            return auctionsRepository.findByTitleContainsIgnoreCaseAndResultOfAuctionAndStartAfter(title, null, start, pageable).toList();
+        }
+        return auctionsRepository.findByTitleContainsIgnoreCaseAndStartAfter(title, start, pageable).toList();
+    }
+
+    public List<Auction> getByTitleAndActiveAndEnd(String title, boolean active, Timestamp end, Pageable pageable) {
+        if (active) {
+            return auctionsRepository.findByTitleContainsIgnoreCaseAndResultOfAuctionAndEndsBefore(title, null, end, pageable).toList();
+        }
+        return auctionsRepository.findByTitleContainsIgnoreCaseAndEndsBefore(title, end, pageable).toList();
+    }
+
+    public List<Auction> getByTitleAndActive(String title, boolean active, Pageable pageable) {
+        if (active) {
+            return auctionsRepository.findByTitleContainsIgnoreCaseAndResultOfAuction(title, null, pageable).toList();
+        }
+        return auctionsRepository.findByTitleContainsIgnoreCase(title, pageable).toList();
+    }
+
+    public List<Auction> getByStartAndEndAndActive(Timestamp start, Timestamp end, boolean active, Pageable pageable) {
+        if (active) {
+            return auctionsRepository.findByStartAfterAndEndsBeforeAndResultOfAuction(start, end, null, pageable).toList();
+        }
+        return auctionsRepository.findByStartAfterAndEndsBefore(start, end, pageable).toList();
+    }
+
+    public List<Auction> getAfterStartAndActive(Timestamp start, boolean active, Pageable pageable) {
+        if (active) {
+            return auctionsRepository.findByStartAfterAndResultOfAuction(start, null, pageable).toList();
+        }
+        return auctionsRepository.findByStartAfter(start, pageable).toList();
+    }
+
+    public List<Auction> getBeforeEndAndActive(Timestamp end, boolean active, Pageable pageable) {
+        if (active) {
+            return  auctionsRepository.findByEndsBeforeAndResultOfAuction(end, null, pageable).toList();
+        }
+        return auctionsRepository.findByEndsBefore(end, pageable).toList();
     }
 
     @Transactional
@@ -110,7 +165,7 @@ public class AuctionService {
     }
 
     public Auction autoCreate() {
-        if (lotService.getLots().size() >= quantity) {
+        if (lotService.getAll().size() >= quantity) {
             Long id = generateId();
             List<Lot> lots = lotService.getLotsWithoutAuction().subList(0, quantity);
             String description = fillingDescription(lots);

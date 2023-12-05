@@ -4,9 +4,14 @@ import com.OnlineAuction.DTO.BetDTO;
 import com.OnlineAuction.Models.Bet;
 import com.OnlineAuction.Services.BetService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
+import java.sql.Timestamp;
 import java.util.List;
 
 @RestController
@@ -21,8 +26,23 @@ public class BetController {
     }
 
     @GetMapping
-    public List<Bet> getAll() {
-        return betService.getAll();
+    public List<Bet> getAll(@RequestParam(value = "size", defaultValue = "10") int size,
+                            @RequestParam(value = "page", defaultValue = "0") int page,
+                            @RequestParam(value = "date_start", required = false) Timestamp dateStart,
+                            @RequestParam(value = "date_end", required = false) Timestamp dateEnd) {
+        Pageable pageable = PageRequest.of(page, size);
+        if (dateStart != null && dateEnd != null) {
+            return betService.getAllInBetweenDays(dateStart, dateEnd, pageable);
+        }
+
+        if (dateStart != null) {
+            return betService.getAllAfterDate(dateStart, pageable);
+        }
+        if (dateEnd != null) {
+            return betService.getAllBeforeDate(dateEnd, pageable);
+        }
+
+        return betService.getAll(pageable);
     }
 
     @GetMapping("/{id}")

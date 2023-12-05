@@ -8,6 +8,7 @@ import com.OnlineAuction.Repositories.LotsRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.math.BigInteger;
@@ -53,8 +54,68 @@ public class LotService {
         throw new UnableToGenerateIdException();
     }
 
-    public List<Lot> getLots() {
+    public List<Lot> getAll(Pageable pageable) {
+        return lotsRepository.findAll(pageable).toList();
+    }
+
+    public List<Lot> getAll() {
         return lotsRepository.findAll();
+    }
+
+    public List<Lot> getByName(String name, Pageable pageable) {
+        return lotsRepository.findByNameContainsIgnoreCase(name, pageable).toList();
+    }
+
+    public List<Lot> getByCurrentPriceInRange(int priceGreaterThan, int priceLessThan, Pageable pageable) {
+        return lotsRepository.findByCurrentPriceBetween(priceGreaterThan, priceLessThan, pageable).toList();
+    }
+
+    public List<Lot> getByCurrentPriceGreaterThan(int price, Pageable pageable) {
+        return lotsRepository.findByCurrentPriceGreaterThan(price, pageable).toList();
+    }
+
+    public List<Lot> getByCurrentPriceLessThan(int price, Pageable pageable) {
+        return lotsRepository.findByCurrentPriceLessThan(price, pageable).toList();
+    }
+
+    public List<Lot> getByAvailable(boolean isAvailable, Pageable pageable) {
+        return lotsRepository.findByIsAvailable(isAvailable, pageable).toList();
+    }
+
+    public List<Lot> getByNameAndAvailableAndCurrentPriceInRange(String name, boolean isAvailable, int priceGreaterThan, int priceLessThan, Pageable pageable) {
+        return lotsRepository.findByNameContainsIgnoreCaseAndIsAvailableAndCurrentPriceBetween(name, isAvailable, priceGreaterThan, priceLessThan, pageable).toList();
+    }
+
+    public List<Lot> getByNameAndAvailableAndCurrentPriceGreaterThan(String name, boolean isAvailable, int priceGreaterThan, Pageable pageable) {
+        return lotsRepository.findByNameContainsIgnoreCaseAndIsAvailableAndCurrentPriceGreaterThan(name, isAvailable, priceGreaterThan, pageable).toList();
+    }
+
+    public List<Lot> getByNameAndAvailableAndCurrentPriceLessThan(String name, boolean isAvailable, int priceLessThan, Pageable pageable) {
+        return lotsRepository.findByNameContainsIgnoreCaseAndIsAvailableAndCurrentPriceLessThan(name, isAvailable, priceLessThan, pageable).toList();
+    }
+
+    public List<Lot> getByNameAndCurrentPriceInRange(String name, int priceGreaterThan, int priceLessThan, Pageable pageable) {
+        return lotsRepository.findByNameContainsIgnoreCaseAndCurrentPriceBetween(name, priceGreaterThan, priceLessThan, pageable).toList();
+    }
+
+    public List<Lot> getByNameAndCurrentPriceGreaterThan(String name, int priceGreaterThan, Pageable pageable) {
+        return lotsRepository.findByNameContainsIgnoreCaseAndCurrentPriceGreaterThan(name, priceGreaterThan, pageable).toList();
+    }
+
+    public List<Lot> getByNameAndCurrentPriceLessThan(String name, int priceLessThan, Pageable pageable) {
+        return lotsRepository.findByNameContainsIgnoreCaseAndCurrentPriceLessThan(name, priceLessThan, pageable).toList();
+    }
+
+    public List<Lot> getByAvailableAndCurrentPriceInRange(boolean isAvailable, int priceGreaterThan, int priceLessThan, Pageable pageable) {
+        return lotsRepository.findByIsAvailableAndCurrentPriceBetween(isAvailable, priceGreaterThan, priceLessThan, pageable).toList();
+    }
+
+    public List<Lot> getByAvailableAndCurrentPriceGreaterThan( boolean isAvailable, int priceGreaterThan, Pageable pageable) {
+        return lotsRepository.findByIsAvailableAndCurrentPriceGreaterThan(isAvailable, priceGreaterThan, pageable).toList();
+    }
+
+    public List<Lot> getByAvailableAndCurrentPriceLessThan(boolean isAvailable, int priceLessThan, Pageable pageable) {
+        return lotsRepository.findByIsAvailableAndCurrentPriceLessThan(isAvailable, priceLessThan, pageable).toList();
     }
 
     public List<Lot> getLotsWithoutAuction() {
@@ -106,7 +167,7 @@ public class LotService {
         }
 
         if (lotDTO.minimum_price() != 0) {
-            existLot.setMinimum_price(lotDTO.minimum_price());
+            existLot.setMinimumPrice(lotDTO.minimum_price());
         }
 
         if (lotDTO.category() != null && lotDTO.category() != existLot.getCategory()) {
@@ -164,8 +225,8 @@ public class LotService {
     }
 
     public void setCurrentPrice(Lot lot, int current_price) {
-        if (current_price > lot.getCurrent_price()) {
-            lot.setCurrent_price(current_price);
+        if (current_price > lot.getCurrentPrice()) {
+            lot.setCurrentPrice(current_price);
             lotsRepository.save(lot);
         }   else {
             throw new RuntimeException();

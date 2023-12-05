@@ -18,7 +18,7 @@ public class Bet {
     public Bet() {}
 
     public Bet(BetDTO betDTO, User user, Lot lot) {
-        full_name = user.getFirst_name() + " " + user.getLast_name();
+        full_name = user.getFirstName() + " " + user.getLastName();
         name_lot = lot.getName();
         price = betDTO.price();
         date = Timestamp.from(Calendar.getInstance().toInstant());
