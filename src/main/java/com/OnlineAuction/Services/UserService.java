@@ -103,9 +103,12 @@ public class UserService {
             String encodedPass = bCrypt.encode(userDTO.password());
             User newUser = new User(userDTO, encodedPass);
             User savedUser = usersRepository.save(newUser);
+
             if (savedUser.getId() == 1) {
                 savedUser.setRole("owner");
+                usersRepository.save(savedUser);
             }
+
             return savedUser;
         }
         throw new EmailAlreadyUsesException();
