@@ -9,6 +9,7 @@ import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.math.BigInteger;
@@ -127,7 +128,7 @@ public class LotService {
     }
 
     public Lot create(LotDTO lotDTO) {
-        User creator = userService.getUserByEmail("test");
+        User creator = userService.getUserByEmail(SecurityContextHolder.getContext().getAuthentication().getName());
 
         if (creator == null) {
             throw new EntityNotFoundException();
