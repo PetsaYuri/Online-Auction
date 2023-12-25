@@ -119,13 +119,7 @@ public class LotService {
     }
 
     public List<Lot> getLotsWithoutAuction() {
-        List<Lot> lots = new ArrayList<>();
-        for (Lot lot : lotsRepository.findAll()) {
-            if (lot.getAuction() == null) {
-                lots.add(lot);
-            }
-        }
-        return lots;
+        return lotsRepository.findByAuction(null);
     }
 
     public Lot getLotById(Long id) {
@@ -185,7 +179,8 @@ public class LotService {
         Auction auction = lot.getAuction();
 
         if (auction != null) {
-            auction = auctionService.removeLotFromAuction(lot);
+            unsetAuction(lot);
+            auctionService.removeLotFromAuction(lot, auction);
         }
 
         if (!lot.getBets().isEmpty()) {
@@ -202,13 +197,6 @@ public class LotService {
         categoryService.unsetLotFromCategory(lot);
         userService.removeLotFromListOfCreatedLots(lot);
         lotsRepository.delete(lot);
-
-        if (auction != null) {
-            if (auction.getLots().isEmpty()) {
-                auctionService.delete(auction.getId());
-            }
-        }
-
         return true;
     }
 
@@ -277,4 +265,6 @@ public class LotService {
         lot.setAvailable(value);
         lotsRepository.save(lot);
     }
+
+
 }

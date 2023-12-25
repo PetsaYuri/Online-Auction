@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import jakarta.persistence.*;
 
 import java.sql.Timestamp;
+import java.util.Calendar;
 
 @Entity
 @Table(name = "results_of_auctions")
@@ -20,7 +21,7 @@ public class ResultOfAuction {
         auction = resultOfActionDTO.auction();
         nameAuction = auction.getTitle();
         start = auction.getStart();
-        ends = auction.getEnds();
+        ends = Timestamp.from(Calendar.getInstance().toInstant());
     }
 
     @Id
@@ -33,7 +34,7 @@ public class ResultOfAuction {
     @Column(nullable = false)
     private Timestamp start, ends;
 
-    @OneToOne(optional = false)
+    @OneToOne
     private Auction auction;
 
     public Long getId() {

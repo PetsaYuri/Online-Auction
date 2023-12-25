@@ -2,12 +2,10 @@ package com.OnlineAuction.Services;
 
 import com.OnlineAuction.DTO.AuctionDTO;
 import com.OnlineAuction.DTO.AuctionPropertiesDTO;
+import com.OnlineAuction.Exceptions.Auction.AuctionHasBeenDeletedException;
 import com.OnlineAuction.Exceptions.UnableToCreateException;
 import com.OnlineAuction.Exceptions.UnableToGenerateIdException;
-import com.OnlineAuction.Models.Auction;
-import com.OnlineAuction.Models.Bet;
-import com.OnlineAuction.Models.Lot;
-import com.OnlineAuction.Models.User;
+import com.OnlineAuction.Models.*;
 import com.OnlineAuction.Repositories.AuctionsRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -191,8 +189,10 @@ public class AuctionService {
         }
 
         if (auctionDTO.lots() != null) {
+            List<Lot> receivedLots = new ArrayList<>(auctionDTO.lots().stream().map(lot -> lotService.getLotById(lot.getId())).toList());
+
             for (Lot lot : existAuction.getLots()) {
-                if (auctionDTO.lots().contains(lot)) {
+                if (receivedLots.contains(lot)) {
                     continue;
                 }
 
@@ -200,25 +200,27 @@ public class AuctionService {
                 lotService.setAvailable(lot, false);
             }
 
-            List<Lot> receivedLots = new ArrayList<>();
+            List<Lot> updatedLotsList = new ArrayList<>();
 
-            for (Lot lot : auctionDTO.lots()) {
-                Lot recLot = lotService.getLotById(lot.getId());
-                if (existAuction.getLots().contains(recLot)) {
+            for (Lot lot : receivedLots) {
+                if (existAuction.getLots().contains(lot)) {
+                    updatedLotsList.add(lot);
                     continue;
                 }
 
-                if (recLot.getAuction() != null) {
-                    lotService.unsetAuction(recLot);
-                    lotService.setAvailable(recLot, false);
+                if (lot.getAuction() != null) {
+                    Auction removedAuction = lotService.unsetAuction(lot);
+                    lotService.setAvailable(lot, false);
+                    removeLotFromAuction(lot, removedAuction);
                 }
 
-                receivedLots.add(recLot);
+                updatedLotsList.add(lot);
             }
 
-            existAuction.setLots(receivedLots);
-            lotService.setAuction(receivedLots, existAuction);
-            lotService.setAvailable(receivedLots, true);
+            existAuction.setLots(updatedLotsList);
+            lotService.setAuction(updatedLotsList, existAuction);
+            lotService.setAvailable(updatedLotsList, true);
+            existAuction.setDescription(fillingDescription(existAuction.getLots()));
         }
 
         return auctionsRepository.save(existAuction);
@@ -244,12 +246,15 @@ public class AuctionService {
         return true;
     }
 
-    public Auction removeLotFromAuction(Lot lot) {
-        Auction auction = lot.getAuction();
+    public void removeLotFromAuction(Lot lot, Auction auction) {
         List<Lot> lots = auction.getLots();
         lots.remove(lot);
         auction.setLots(lots);
-        return auctionsRepository.save(auction);
+        auctionsRepository.save(auction);
+
+        if (lots.isEmpty()) {
+            delete(auction.getId());
+        }
     }
 
     public String fillingDescription(List<Lot> lots) {
@@ -258,7 +263,7 @@ public class AuctionService {
             description += lot.getName() + ", ";
         }
         StringBuilder stringBuilder = new StringBuilder(description);
-        return stringBuilder.substring(0, description.length() - 1);
+        return stringBuilder.substring(0, description.length() - 2);
     }
 
     public int getQuantity() {
@@ -345,7 +350,7 @@ public class AuctionService {
     public void setTimer(Auction auction) {
         Instant currentInstant = Instant.ofEpochMilli(System.currentTimeMillis());
         long time = ChronoUnit.MILLIS.between(currentInstant, auction.getEnds().toInstant());
-     //   long time = 60000 / 2;
+      //  long time = 60000 / 2;
         TimerTask timerTask = new CreatingResultOfAuction(auction);
         Timer timer = new Timer();
         timer.schedule(timerTask, time);
@@ -365,22 +370,33 @@ public class AuctionService {
         }
     }
 
-    public void performResultsOfAuction(Auction auction) {
+    public Auction performResultsOfAuction(Auction auction) {
         List<Lot> lots = auction.getLots();
-        for (Lot lot : lots) {
-            List<Bet> bets = betService.getBetsByLot(lot);
-            if (bets.isEmpty()) {
-                continue;
+        int size = lots.size();
+        for (int i = 0; i < size; i++) {
+            if (lots.isEmpty()) {
+                break;
             }
 
-            Bet lastBet = bets.get(bets.size() - 1);
-            User winner = lastBet.getUser();
-            lotService.setWinner(lot, winner);
-            userService.addLotToListLotsOfWinning(winner, lot);
-            lotService.setAvailable(lot, false);
+            List<Bet> bets = betService.getBetsByLot(lots.get(i));
+            if (bets.isEmpty()) {
+                lotService.unsetAuction(lots.get(i));
+                removeLotFromAuction(lots.get(i), auction);
+                i--;
+            }   else {
+                Bet lastBet = bets.get(bets.size() - 1);
+                User winner = lastBet.getUser();
+                lotService.setWinner(lots.get(i), winner);
+                userService.addLotToListLotsOfWinning(winner, lots.get(i));
+                lotService.setAvailable(lots.get(i), false);
+            }
         }
 
-        resultOfAuctionService.create(auction.getId());
+        if (!lots.isEmpty()) {
+            resultOfAuctionService.create(auction.getId());
+            return getOneById(auction.getId());
+        }
+        throw new AuctionHasBeenDeletedException("The auction has been deleted, because it's empty. The auction result cannot be created.");
     }
 
     public void checkAuctions() {

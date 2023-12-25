@@ -6,6 +6,8 @@ import com.OnlineAuction.Repositories.AuctionsRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.sql.Timestamp;
+
 @Service
 public class AuctionResultService {
 
@@ -28,6 +30,11 @@ public class AuctionResultService {
 
     public void removeResultOfAuction(Auction auction) {
         auction.setResultOfAuction(null);
+        auctionsRepository.save(auction);
+    }
+
+    public void setEndOfAuction(Auction auction, Timestamp end) {
+        auction.setEnds(end);
         auctionsRepository.save(auction);
     }
 }

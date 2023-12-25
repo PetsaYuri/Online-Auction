@@ -2,6 +2,7 @@ package com.OnlineAuction.Config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -19,8 +20,20 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.ALWAYS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auctions/**").authenticated()
-                        .anyRequest().permitAll())
+                        .requestMatchers("/signup").permitAll()
+                        .requestMatchers("/login").permitAll()
+                        .requestMatchers("/uploadImage").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/users/{id}").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/auctions").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/auctions/{id}").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/bets/{id}").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/bets").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/categories").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/lots").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/lots/{id}").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/lots").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/resultsOfAuctions/{id}").permitAll()
+                        .anyRequest().hasAnyRole("admin", "owner"))
                 .logout(logout -> logout.logoutUrl("/logout"))
                 .httpBasic(Customizer.withDefaults())
                 .build();

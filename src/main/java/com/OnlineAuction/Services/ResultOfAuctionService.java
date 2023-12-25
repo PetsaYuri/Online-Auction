@@ -73,6 +73,7 @@ public class ResultOfAuctionService {
         ResultOfAuction newResultOfAuction = new ResultOfAuction(new ResultOfActionDTO(auction));
         resultsOfAuctionsRepository.save(newResultOfAuction);
         auctionResultService.setResultOfAuction(newResultOfAuction);
+        auctionResultService.setEndOfAuction(auction, newResultOfAuction.getEnds());
         return newResultOfAuction;
     }
 

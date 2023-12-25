@@ -27,6 +27,7 @@ public class User {
         listOfCreatedLots = new ArrayList<>();
         listLotOfWinning = new ArrayList<>();
         role = "user";
+        image = userDTO.image();
     }
 
     @Id

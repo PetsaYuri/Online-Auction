@@ -4,7 +4,6 @@ import com.OnlineAuction.DTO.AuctionDTO;
 import com.OnlineAuction.DTO.AuctionPropertiesDTO;
 import com.OnlineAuction.Models.Auction;
 import com.OnlineAuction.Services.AuctionService;
-import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -13,8 +12,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
-import java.util.Collections;
-import java.util.Enumeration;
 import java.util.List;
 import java.util.TimeZone;
 
@@ -119,8 +116,11 @@ public class AuctionController {
         return auctionService.updateAuctionProperties(auctionPropertiesDTO);
     }
 
-    /*@PostMapping("/{id}/earlyEnd")
-    public Auction earlyEndOfAuction(@PathVariable("id") Long id) {
-
-    }*/
+    @PostMapping("/{id}/earlyEnd")
+    public AuctionDTO earlyEndOfAuction(@PathVariable("id") Long id) {
+        Auction auction = auctionService.getOneById(id);
+        Auction updatedAuction = auctionService.performResultsOfAuction(auction);
+        return new AuctionDTO(updatedAuction.getId(), updatedAuction.getTitle(), updatedAuction.getDescription(), 0, updatedAuction.getStart().toString(),
+                updatedAuction.getEnds().toString(), updatedAuction.getLots());
+    }
 }

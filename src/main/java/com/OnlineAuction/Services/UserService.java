@@ -219,7 +219,7 @@ public class UserService {
         return getUserByEmail(SecurityContextHolder.getContext().getAuthentication().getName());
     }
 
-    public User setImage(Long idUser, MultipartFile file) {
+    /*public User setImage(Long idUser, MultipartFile file) {
         User user = getOne(idUser);
 
         if (calledByAdmin() || getUserWhoMadeRequest().equals(user)) {
@@ -230,5 +230,5 @@ public class UserService {
         }   else {
             throw new UserDoesNotHaveAccessException();
         }
-    }
+    }*/
 }

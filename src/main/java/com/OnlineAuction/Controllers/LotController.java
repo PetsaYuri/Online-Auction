@@ -34,102 +34,113 @@ public class LotController {
         if (query != null && isAvailable != null && priceGreaterThan != null && priceLessThan != null) {
             return lotService.getByNameAndAvailableAndCurrentPriceInRange(query, Boolean.parseBoolean(isAvailable), Integer.parseInt(priceGreaterThan),
                     Integer.parseInt(priceLessThan), pageable).stream().map(lot -> new LotDTO(lot.getId(), lot.getName(), lot.getDescription(), lot.getImage(),
-                    lot.getMinimumPrice(), lot.getCategory())).toList();
+                    lot.getCurrentPrice(), lot.getMinimumPrice(), lot.isAvailable(), lot.getCategory(), lot.getAuction(), lot.getCreator(), lot.getWinner())).toList();
         }
 
         if (query != null && isAvailable != null && priceGreaterThan != null) {
             return lotService.getByNameAndAvailableAndCurrentPriceGreaterThan(query, Boolean.parseBoolean(isAvailable), Integer.parseInt(priceGreaterThan),
                     pageable).stream().map(lot -> new LotDTO(lot.getId(), lot.getName(), lot.getDescription(), lot.getImage(),
-                    lot.getMinimumPrice(), lot.getCategory())).toList();
+                    lot.getCurrentPrice(), lot.getMinimumPrice(), lot.isAvailable(), lot.getCategory(), lot.getAuction(), lot.getCreator(), lot.getWinner())).toList();
         }
 
         if (query != null && isAvailable != null && priceLessThan != null) {
             return lotService.getByNameAndAvailableAndCurrentPriceLessThan(query, Boolean.parseBoolean(isAvailable), Integer.parseInt(priceLessThan),
                     pageable).stream().map(lot -> new LotDTO(lot.getId(), lot.getName(), lot.getDescription(), lot.getImage(),
-                    lot.getMinimumPrice(), lot.getCategory())).toList();
+                    lot.getCurrentPrice(), lot.getMinimumPrice(), lot.isAvailable(), lot.getCategory(), lot.getAuction(), lot.getCreator(), lot.getWinner())).toList();
         }
 
         if (query != null && priceGreaterThan != null && priceLessThan != null) {
             return lotService.getByNameAndCurrentPriceInRange(query, Integer.parseInt(priceGreaterThan), Integer.parseInt(priceLessThan), pageable)
-                    .stream().map(lot -> new LotDTO(lot.getId(), lot.getName(), lot.getDescription(), lot.getImage(), lot.getMinimumPrice(),
-                            lot.getCategory())).toList();
+                    .stream().map(lot -> new LotDTO(lot.getId(), lot.getName(), lot.getDescription(), lot.getImage(), lot.getCurrentPrice(),
+                            lot.getMinimumPrice(), lot.isAvailable(), lot.getCategory(), lot.getAuction(), lot.getCreator(), lot.getWinner())).toList();
         }
 
         if (query != null && priceGreaterThan != null) {
             return lotService.getByNameAndCurrentPriceGreaterThan(query, Integer.parseInt(priceGreaterThan), pageable).stream().map(lot ->
-                    new LotDTO(lot.getId(), lot.getName(), lot.getDescription(), lot.getImage(), lot.getMinimumPrice(), lot.getCategory())).toList();
+                    new LotDTO(lot.getId(), lot.getName(), lot.getDescription(), lot.getImage(), lot.getCurrentPrice(), lot.getMinimumPrice(), lot.isAvailable(),
+                            lot.getCategory(), lot.getAuction(), lot.getCreator(), lot.getWinner())).toList();
         }
 
         if (query != null && priceLessThan != null) {
             return lotService.getByNameAndCurrentPriceLessThan(query, Integer.parseInt(priceLessThan), pageable).stream().map(lot ->
-                    new LotDTO(lot.getId(), lot.getName(), lot.getDescription(), lot.getImage(), lot.getMinimumPrice(), lot.getCategory())).toList();
+                    new LotDTO(lot.getId(), lot.getName(), lot.getDescription(), lot.getImage(), lot.getCurrentPrice(), lot.getMinimumPrice(), lot.isAvailable(),
+                            lot.getCategory(), lot.getAuction(), lot.getCreator(), lot.getWinner())).toList();
         }
 
         if (isAvailable != null && priceGreaterThan != null && priceLessThan != null) {
             return lotService.getByAvailableAndCurrentPriceInRange(Boolean.parseBoolean(isAvailable), Integer.parseInt(priceGreaterThan),
                     Integer.parseInt(priceLessThan), pageable).stream().map(lot ->
-                    new LotDTO(lot.getId(), lot.getName(), lot.getDescription(), lot.getImage(), lot.getMinimumPrice(), lot.getCategory())).toList();
+                    new LotDTO(lot.getId(), lot.getName(), lot.getDescription(), lot.getImage(), lot.getCurrentPrice(), lot.getMinimumPrice(), lot.isAvailable(),
+                            lot.getCategory(), lot.getAuction(), lot.getCreator(), lot.getWinner())).toList();
         }
 
         if (isAvailable != null && priceGreaterThan != null) {
             return lotService.getByAvailableAndCurrentPriceGreaterThan(Boolean.parseBoolean(isAvailable), Integer.parseInt(priceGreaterThan), pageable)
-                    .stream().map(lot -> new LotDTO(lot.getId(), lot.getName(), lot.getDescription(), lot.getImage(), lot.getMinimumPrice(), lot.getCategory())).toList();
+                    .stream().map(lot -> new LotDTO(lot.getId(), lot.getName(), lot.getDescription(), lot.getImage(), lot.getCurrentPrice(), lot.getMinimumPrice(),
+                            lot.isAvailable(), lot.getCategory(), lot.getAuction(), lot.getCreator(), lot.getWinner())).toList();
         }
 
         if (isAvailable != null && priceLessThan != null) {
             return lotService.getByAvailableAndCurrentPriceLessThan(Boolean.parseBoolean(isAvailable), Integer.parseInt(priceLessThan), pageable)
-                    .stream().map(lot -> new LotDTO(lot.getId(), lot.getName(), lot.getDescription(), lot.getImage(), lot.getMinimumPrice(), lot.getCategory())).toList();
+                    .stream().map(lot -> new LotDTO(lot.getId(), lot.getName(), lot.getDescription(), lot.getImage(), lot.getCurrentPrice(), lot.getMinimumPrice(),
+                            lot.isAvailable(), lot.getCategory(), lot.getAuction(), lot.getCreator(), lot.getWinner())).toList();
         }
 
         if (query != null) {
             return lotService.getByName(query, pageable).stream().map(lot -> new LotDTO(lot.getId(), lot.getName(), lot.getDescription(), lot.getImage(),
-                    lot.getMinimumPrice(), lot.getCategory())).toList();
+                    lot.getCurrentPrice(), lot.getMinimumPrice(), lot.isAvailable(), lot.getCategory(), lot.getAuction(), lot.getCreator(), lot.getWinner())).toList();
         }
 
         if (isAvailable != null) {
             return lotService.getByAvailable(Boolean.parseBoolean(isAvailable), pageable).stream().map(lot -> new LotDTO(lot.getId(), lot.getName(),
-                    lot.getDescription(), lot.getImage(), lot.getMinimumPrice(), lot.getCategory())).toList();
+                    lot.getDescription(), lot.getImage(), lot.getCurrentPrice(), lot.getMinimumPrice(), lot.isAvailable(), lot.getCategory(), lot.getAuction(),
+                    lot.getCreator(), lot.getWinner())).toList();
         }
 
         if (priceGreaterThan != null && priceLessThan != null) {
             return lotService.getByCurrentPriceInRange(Integer.parseInt(priceGreaterThan), Integer.parseInt(priceLessThan), pageable).stream().map(lot ->
-                    new LotDTO(lot.getId(), lot.getName(), lot.getDescription(), lot.getImage(), lot.getMinimumPrice(), lot.getCategory())).toList();
+                    new LotDTO(lot.getId(), lot.getName(), lot.getDescription(), lot.getImage(), lot.getCurrentPrice(), lot.getMinimumPrice(), lot.isAvailable(),
+                            lot.getCategory(), lot.getAuction(), lot.getCreator(), lot.getWinner())).toList();
         }
 
         if (priceGreaterThan != null) {
             return lotService.getByCurrentPriceGreaterThan(Integer.parseInt(priceGreaterThan), pageable).stream().map(lot -> new LotDTO(lot.getId(), lot.getName(),
-                    lot.getDescription(), lot.getImage(), lot.getMinimumPrice(), lot.getCategory())).toList();
+                    lot.getDescription(), lot.getImage(), lot.getCurrentPrice(), lot.getMinimumPrice(), lot.isAvailable(), lot.getCategory(), lot.getAuction(),
+                    lot.getCreator(), lot.getWinner())).toList();
         }
 
         if (priceLessThan != null) {
             return lotService.getByCurrentPriceLessThan(Integer.parseInt(priceLessThan), pageable).stream().map(lot -> new LotDTO(lot.getId(), lot.getName(), lot.getDescription(),
-                    lot.getImage(), lot.getMinimumPrice(), lot.getCategory())).toList();
+                    lot.getImage(), lot.getCurrentPrice(), lot.getMinimumPrice(), lot.isAvailable(), lot.getCategory(), lot.getAuction(), lot.getCreator(), lot.getWinner())).toList();
         }
 
         return lotService.getAll(pageable).stream().map(lot -> new LotDTO(lot.getId(), lot.getName(), lot.getDescription(), lot.getImage(),
-                lot.getMinimumPrice(), lot.getCategory())).toList();
+                lot.getCurrentPrice(), lot.getMinimumPrice(), lot.isAvailable(), lot.getCategory(), lot.getAuction(), lot.getCreator(), lot.getWinner())).toList();
     }
 
     @GetMapping("/{id}")
     public LotDTO getLotById(@PathVariable("id") Long id) {
         Lot receivedLot = lotService.getLotById(id);
-        return new LotDTO(receivedLot.getId(), receivedLot.getName(), receivedLot.getDescription(), receivedLot.getImage(),
-                receivedLot.getMinimumPrice(), receivedLot.getCategory());
+        return new LotDTO(receivedLot.getId(), receivedLot.getName(), receivedLot.getDescription(), receivedLot.getImage(), receivedLot.getCurrentPrice(),
+                receivedLot.getMinimumPrice(), receivedLot.isAvailable(), receivedLot.getCategory(), receivedLot.getAuction(), receivedLot.getCreator(),
+                receivedLot.getWinner());
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public LotDTO create(@RequestBody LotDTO lotDTO) {
         Lot createdLot = lotService.create(lotDTO);
-        return new LotDTO(createdLot.getId(), createdLot.getName(), createdLot.getDescription(), createdLot.getImage(),
-                createdLot.getMinimumPrice(), createdLot.getCategory());
+        return new LotDTO(createdLot.getId(), createdLot.getName(), createdLot.getDescription(), createdLot.getImage(), createdLot.getCurrentPrice(),
+                createdLot.getMinimumPrice(), createdLot.isAvailable(), createdLot.getCategory(), createdLot.getAuction(), createdLot.getCreator(),
+                createdLot.getWinner());
     }
 
     @PutMapping("/{id}")
     public LotDTO update(@RequestBody LotDTO lotDTO, @PathVariable("id") Long id_lot) {
         Lot updatedLot = lotService.update(lotDTO, id_lot);
-        return new LotDTO(updatedLot.getId(), updatedLot.getName(), updatedLot.getDescription(), updatedLot.getImage(),
-                updatedLot.getMinimumPrice(), updatedLot.getCategory());
+        return new LotDTO(updatedLot.getId(), updatedLot.getName(), updatedLot.getDescription(), updatedLot.getImage(), updatedLot.getCurrentPrice(),
+                updatedLot.getMinimumPrice(), updatedLot.isAvailable(), updatedLot.getCategory(), updatedLot.getAuction(), updatedLot.getCreator(),
+                updatedLot.getWinner());
     }
 
     @DeleteMapping("/{id}")

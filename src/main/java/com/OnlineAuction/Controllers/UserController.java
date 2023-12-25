@@ -79,20 +79,23 @@ public class UserController {
     @GetMapping("/{id}")
     public UserDTO getById(@PathVariable("id") Long id) {
         User user = userService.getOne(id);
-        return new UserDTO(user.getFirstName(), user.getLastName(), user.getEmail(), null, user.getImage(), user.getRole());
+        return new UserDTO(user.getFirstName(), user.getLastName(), user.getEmail(), null, user.getImage(), user.getRole(), user.getListOfCreatedLots(),
+                user.getListLotOfWinning());
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public UserDTO create(@RequestBody UserDTO userDTO) {
         User user = userService.create(userDTO);
-        return new UserDTO(user.getFirstName(), user.getLastName(), user.getEmail(), null, user.getImage(), user.getRole());
+        return new UserDTO(user.getFirstName(), user.getLastName(), user.getEmail(), null, user.getImage(), user.getRole(), user.getListOfCreatedLots(),
+                user.getListLotOfWinning());
     }
 
     @PutMapping("/{id}")
     public UserDTO update(@RequestBody UserDTO userDTO, @PathVariable("id") Long id_user) {
         User updatedUser = userService.update(userDTO, id_user);
-        return new UserDTO(updatedUser.getFirstName(), updatedUser.getLastName(), updatedUser.getEmail(), null, updatedUser.getImage(), updatedUser.getRole());
+        return new UserDTO(updatedUser.getFirstName(), updatedUser.getLastName(), updatedUser.getEmail(), null, updatedUser.getImage(),
+                updatedUser.getRole(), updatedUser.getListOfCreatedLots(), updatedUser.getListLotOfWinning());
     }
 
     @DeleteMapping("/{id}")
@@ -100,32 +103,23 @@ public class UserController {
         return userService.delete(id);
     }
 
-    @PostMapping("/signup")
-    public UserDTO signup(@RequestBody UserDTO userDTO) {
-        User user = userService.create(userDTO);
-        return new UserDTO(user.getFirstName(), user.getLastName(), user.getEmail(), null, user.getImage(), user.getRole());
-    }
-
-    @PostMapping("/login")
-    public String login() {
-        return "Login successful";
-    }
-
     @PostMapping("/{id}/setAdmin")
     public UserDTO setAdmin(@PathVariable("id") Long idUser) {
         User user = userService.setAdminRole(idUser);
-        return new UserDTO(user.getFirstName(), user.getLastName(), user.getEmail(), null, user.getImage(), user.getRole());
+        return new UserDTO(user.getFirstName(), user.getLastName(), user.getEmail(), null, user.getImage(), user.getRole(), user.getListOfCreatedLots(),
+                user.getListLotOfWinning());
     }
 
     @PostMapping("/{id}/removeAdmin")
     public UserDTO removeAdmin(@PathVariable("id") Long idUser) {
         User user = userService.removeAdminRole(idUser);
-        return new UserDTO(user.getFirstName(), user.getLastName(), user.getEmail(), null, user.getImage(), user.getRole());
+        return new UserDTO(user.getFirstName(), user.getLastName(), user.getEmail(), null, user.getImage(), user.getRole(), user.getListOfCreatedLots(),
+                user.getListLotOfWinning());
     }
 
-    @PostMapping("/{id}/setImage")
+    /*@PostMapping("/{id}/setImage")
     public UserDTO setImage(@PathVariable("id") Long idUser, @RequestParam("file") MultipartFile file) {
         User user = userService.setImage(idUser, file);
         return new UserDTO(user.getFirstName(), user.getLastName(), user.getEmail(), null, user.getImage(), user.getRole());
-    }
+    }*/
 }
