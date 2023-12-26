@@ -57,11 +57,9 @@ public class BetService {
     }
 
     public Bet add(BetDTO betDTO, Long id) {
-        User user = userService.getOne(1L);
+        User user = userService.getUserByEmail(SecurityContextHolder.getContext().getAuthentication().getName());
         Lot lot = lotService.getLotById(id);
-        User sender = userService.getUserByEmail(SecurityContextHolder.getContext().getAuthentication().getName());
 
-        if (lot.getCreator().equals(sender) || sender.getRole().equals("owner") || sender.getRole().equals("admin")) {
             if (!lot.isAvailable()) {
                 throw new UnableToCreateException("Unable to add a bet. The auction has probably ended.");
             }
@@ -75,9 +73,6 @@ public class BetService {
                 return newBet;
             }
             throw new UnableToCreateException("Unable to create bet. Price is lower than current price");
-        }   else {
-            throw new UserDoesNotHaveAccessException();
-        }
     }
 
     public Bet update(BetDTO betDTO, Long id) {
