@@ -8,7 +8,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -79,22 +78,22 @@ public class UserController {
     @GetMapping("/{id}")
     public UserDTO getById(@PathVariable("id") Long id) {
         User user = userService.getOne(id);
-        return new UserDTO(user.getFirstName(), user.getLastName(), user.getEmail(), null, user.getImage(), user.getRole(), user.getListOfCreatedLots(),
-                user.getListLotOfWinning());
+        return new UserDTO(user.getFirstName(), user.getLastName(), user.getEmail(), null, user.getImage(), user.isBlocked(), user.getRole(),
+                user.getListOfCreatedLots(), user.getListLotOfWinning());
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public UserDTO create(@RequestBody UserDTO userDTO) {
         User user = userService.create(userDTO);
-        return new UserDTO(user.getFirstName(), user.getLastName(), user.getEmail(), null, user.getImage(), user.getRole(), user.getListOfCreatedLots(),
-                user.getListLotOfWinning());
+        return new UserDTO(user.getFirstName(), user.getLastName(), user.getEmail(), null, user.getImage(), userDTO.isBlocked(), user.getRole(),
+                user.getListOfCreatedLots(), user.getListLotOfWinning());
     }
 
     @PutMapping("/{id}")
     public UserDTO update(@RequestBody UserDTO userDTO, @PathVariable("id") Long id_user) {
         User updatedUser = userService.update(userDTO, id_user);
-        return new UserDTO(updatedUser.getFirstName(), updatedUser.getLastName(), updatedUser.getEmail(), null, updatedUser.getImage(),
+        return new UserDTO(updatedUser.getFirstName(), updatedUser.getLastName(), updatedUser.getEmail(), null, updatedUser.getImage(), updatedUser.isBlocked(),
                 updatedUser.getRole(), updatedUser.getListOfCreatedLots(), updatedUser.getListLotOfWinning());
     }
 
@@ -106,20 +105,28 @@ public class UserController {
     @PostMapping("/{id}/setAdmin")
     public UserDTO setAdmin(@PathVariable("id") Long idUser) {
         User user = userService.setAdminRole(idUser);
-        return new UserDTO(user.getFirstName(), user.getLastName(), user.getEmail(), null, user.getImage(), user.getRole(), user.getListOfCreatedLots(),
-                user.getListLotOfWinning());
+        return new UserDTO(user.getFirstName(), user.getLastName(), user.getEmail(), null, user.getImage(), user.isBlocked(), user.getRole(),
+                user.getListOfCreatedLots(), user.getListLotOfWinning());
     }
 
     @PostMapping("/{id}/removeAdmin")
     public UserDTO removeAdmin(@PathVariable("id") Long idUser) {
         User user = userService.removeAdminRole(idUser);
-        return new UserDTO(user.getFirstName(), user.getLastName(), user.getEmail(), null, user.getImage(), user.getRole(), user.getListOfCreatedLots(),
-                user.getListLotOfWinning());
+        return new UserDTO(user.getFirstName(), user.getLastName(), user.getEmail(), null, user.getImage(), user.isBlocked(), user.getRole(),
+                user.getListOfCreatedLots(), user.getListLotOfWinning());
     }
 
-    /*@PostMapping("/{id}/setImage")
-    public UserDTO setImage(@PathVariable("id") Long idUser, @RequestParam("file") MultipartFile file) {
-        User user = userService.setImage(idUser, file);
-        return new UserDTO(user.getFirstName(), user.getLastName(), user.getEmail(), null, user.getImage(), user.getRole());
-    }*/
+    @PostMapping("/{id}/blockUser")
+    public UserDTO blockUser(@PathVariable("id") Long idUser) {
+        User user = userService.blockUser(idUser);
+        return new UserDTO(user.getFirstName(), user.getLastName(), user.getEmail(), null, user.getImage(), user.isBlocked(), user.getRole(),
+                user.getListOfCreatedLots(), user.getListLotOfWinning());
+    }
+
+    @PostMapping("/{id}/unblockUser")
+    public UserDTO unblockUser(@PathVariable("id") Long idUser) {
+        User user = userService.unblockUser(idUser);
+        return new UserDTO(user.getFirstName(), user.getLastName(), user.getEmail(), null, user.getImage(), user.isBlocked(), user.getRole(),
+                user.getListOfCreatedLots(), user.getListLotOfWinning());
+    }
 }

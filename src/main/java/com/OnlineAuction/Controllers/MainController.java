@@ -28,15 +28,15 @@ public class MainController {
     @PostMapping("/signup")
     public UserDTO signup(@RequestBody UserDTO userDTO) {
         User user = userService.create(userDTO);
-        return new UserDTO(user.getFirstName(), user.getLastName(), user.getEmail(), null, user.getImage(), user.getRole(), user.getListOfCreatedLots(),
-                user.getListLotOfWinning());
+        return new UserDTO(user.getFirstName(), user.getLastName(), user.getEmail(), null, user.getImage(), user.isBlocked(), user.getRole(),
+                user.getListOfCreatedLots(), user.getListLotOfWinning());
     }
 
     @PostMapping("/login")
     public UserDTO login() {
         User user = userService.getUserByEmail(SecurityContextHolder.getContext().getAuthentication().getName());
-        return new UserDTO(user.getFirstName(), user.getLastName(), user.getEmail(), null, user.getImage(), user.getRole(), user.getListOfCreatedLots(),
-                user.getListLotOfWinning());
+        return new UserDTO(user.getFirstName(), user.getLastName(), user.getEmail(), null, user.getImage(), user.isBlocked(), user.getRole(),
+                user.getListOfCreatedLots(), user.getListLotOfWinning());
     }
 
     @PostMapping("/uploadImage")

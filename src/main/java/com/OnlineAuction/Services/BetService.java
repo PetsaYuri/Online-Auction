@@ -2,6 +2,8 @@ package com.OnlineAuction.Services;
 
 import com.OnlineAuction.DTO.BetDTO;
 import com.OnlineAuction.Exceptions.UnableToCreateException;
+import com.OnlineAuction.Exceptions.UnableToDeleteException;
+import com.OnlineAuction.Exceptions.User.UserDoesNotHaveAccessException;
 import com.OnlineAuction.Models.Bet;
 import com.OnlineAuction.Models.Lot;
 import com.OnlineAuction.Models.User;
@@ -10,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
@@ -56,20 +59,25 @@ public class BetService {
     public Bet add(BetDTO betDTO, Long id) {
         User user = userService.getOne(1L);
         Lot lot = lotService.getLotById(id);
+        User sender = userService.getUserByEmail(SecurityContextHolder.getContext().getAuthentication().getName());
 
-        if (!lot.isAvailable()) {
-            throw new UnableToCreateException("Unable to add a bet. The auction has probably ended.");
-        }
+        if (lot.getCreator().equals(sender) || sender.getRole().equals("owner") || sender.getRole().equals("admin")) {
+            if (!lot.isAvailable()) {
+                throw new UnableToCreateException("Unable to add a bet. The auction has probably ended.");
+            }
 
-        if (betDTO.price() > lot.getCurrentPrice()) {
-            Bet newBet = new Bet(betDTO, user, lot);
-            betsRepository.save(newBet);
-            lotService.setCurrentPrice(newBet.getLot(), newBet.getPrice());
-            lotService.addBet(newBet.getLot(), newBet);
-            userService.setBetToUser(user, newBet);
-            return newBet;
+            if (betDTO.price() > lot.getCurrentPrice()) {
+                Bet newBet = new Bet(betDTO, user, lot);
+                betsRepository.save(newBet);
+                lotService.setCurrentPrice(newBet.getLot(), newBet.getPrice());
+                lotService.addBet(newBet.getLot(), newBet);
+                userService.setBetToUser(user, newBet);
+                return newBet;
+            }
+            throw new UnableToCreateException("Unable to create bet. Price is lower than current price");
+        }   else {
+            throw new UserDoesNotHaveAccessException();
         }
-        throw new UnableToCreateException("Unable to create bet. Price is lower than current price");
     }
 
     public Bet update(BetDTO betDTO, Long id) {
@@ -89,10 +97,19 @@ public class BetService {
 
     public boolean delete(Long id) {
         Bet bet = betsRepository.getReferenceById(id);
-        lotService.removeBet(bet.getLot());
-        userService.removeBetFromUser(bet.getUser());
-        betsRepository.delete(bet);
-        return true;
+        User sender = userService.getUserByEmail(SecurityContextHolder.getContext().getAuthentication().getName());
+        if (bet.getUser().equals(sender)) {
+            if (!bet.getLot().isAvailable()) {
+                throw new UnableToDeleteException("Unable to delete bet. The auction has probably ended.");
+            }
+
+        }   else if (sender.getRole().equals("owner") || sender.getRole().equals("admin")) {
+            lotService.removeBet(bet.getLot());
+            userService.removeBetFromUser(bet.getUser());
+            betsRepository.delete(bet);
+            return true;
+        }
+        return false;
     }
 
     public List<Bet> getBetsByLot(Lot lot) {

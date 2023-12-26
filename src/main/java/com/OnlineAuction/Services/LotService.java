@@ -3,6 +3,7 @@ package com.OnlineAuction.Services;
 import com.OnlineAuction.DTO.BetDTO;
 import com.OnlineAuction.DTO.LotDTO;
 import com.OnlineAuction.Exceptions.UnableToGenerateIdException;
+import com.OnlineAuction.Exceptions.User.UserDoesNotHaveAccessException;
 import com.OnlineAuction.Models.*;
 import com.OnlineAuction.Repositories.LotsRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -148,57 +149,68 @@ public class LotService {
 
     public Lot update(LotDTO lotDTO, Long id_lot) {
         Lot existLot = lotsRepository.getReferenceById(id_lot);
+        User sender = userService.getUserByEmail(SecurityContextHolder.getContext().getAuthentication().getName());
 
-        if (lotDTO.name() != null) {
-            existLot.setName(lotDTO.name());
+        if (existLot.getCreator().equals(sender) || sender.getRole().equals("owner") || sender.getRole().equals("admin")) {
+            if (lotDTO.name() != null) {
+                existLot.setName(lotDTO.name());
+            }
+
+            if (lotDTO.description() != null) {
+                existLot.setDescription(lotDTO.description());
+            }
+
+            if (lotDTO.image() != null) {
+                existLot.setImage(lotDTO.image());
+            }
+
+            if (lotDTO.minimum_price() != 0) {
+                existLot.setMinimumPrice(lotDTO.minimum_price());
+            }
+
+            if (lotDTO.category() != null && lotDTO.category() != existLot.getCategory()) {
+                Category category = categoryService.getOne(lotDTO.category().getId());
+                categoryService.unsetLotFromCategory(existLot);
+                existLot.setCategory(category);
+                categoryService.addLotToCategory(existLot);
+            }
+
+            return lotsRepository.save(existLot);
+        }   else {
+            throw new UserDoesNotHaveAccessException();
         }
-
-        if (lotDTO.description() != null) {
-            existLot.setDescription(lotDTO.description());
-        }
-
-        if (lotDTO.image() != null) {
-            existLot.setImage(lotDTO.image());
-        }
-
-        if (lotDTO.minimum_price() != 0) {
-            existLot.setMinimumPrice(lotDTO.minimum_price());
-        }
-
-        if (lotDTO.category() != null && lotDTO.category() != existLot.getCategory()) {
-            Category category = categoryService.getOne(lotDTO.category().getId());
-            categoryService.unsetLotFromCategory(existLot);
-            existLot.setCategory(category);
-            categoryService.addLotToCategory(existLot);
-        }
-
-        return lotsRepository.save(existLot);
     }
 
     public boolean delete(Long id) {
         Lot lot = lotsRepository.getReferenceById(id);
-        Auction auction = lot.getAuction();
+        User sender = userService.getUserByEmail(SecurityContextHolder.getContext().getAuthentication().getName());
 
-        if (auction != null) {
-            unsetAuction(lot);
-            auctionService.removeLotFromAuction(lot, auction);
-        }
+        if (lot.getCreator().equals(sender) || sender.getRole().equals("owner") || sender.getRole().equals("admin")) {
+            Auction auction = lot.getAuction();
 
-        if (!lot.getBets().isEmpty()) {
-            List<Bet> list = lot.getBets();
-            for (Bet bet : list) {
-                betService.delete(bet.getId());
+            if (auction != null) {
+                unsetAuction(lot);
+                auctionService.removeLotFromAuction(lot, auction);
             }
-        }
 
-        if (lot.getWinner() != null) {
-            userService.removeLotFromListLotsOfWinning(lot);
-        }
+            if (!lot.getBets().isEmpty()) {
+                List<Bet> list = lot.getBets();
+                for (Bet bet : list) {
+                    betService.delete(bet.getId());
+                }
+            }
 
-        categoryService.unsetLotFromCategory(lot);
-        userService.removeLotFromListOfCreatedLots(lot);
-        lotsRepository.delete(lot);
-        return true;
+            if (lot.getWinner() != null) {
+                userService.removeLotFromListLotsOfWinning(lot);
+            }
+
+            categoryService.unsetLotFromCategory(lot);
+            userService.removeLotFromListOfCreatedLots(lot);
+            lotsRepository.delete(lot);
+            return true;
+        }   else {
+            throw new UserDoesNotHaveAccessException();
+        }
     }
 
     public void setAuction(List<Lot> lots, Auction auction) {

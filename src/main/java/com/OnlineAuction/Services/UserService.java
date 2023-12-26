@@ -12,7 +12,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -26,14 +25,11 @@ public class UserService {
 
     private final BetService betService;
 
-    private final ImageUploadService imageUploadService;
-
     @Autowired
-    public UserService(UsersRepository usersRepository, LotService lotService, BetService betService, ImageUploadService imageUploadService) {
+    public UserService(UsersRepository usersRepository, LotService lotService, BetService betService) {
         this.usersRepository = usersRepository;
         this.lotService = lotService;
         this.betService = betService;
-        this.imageUploadService = imageUploadService;
     }
 
     public List<User> getAll(Pageable pageable) {
@@ -117,24 +113,29 @@ public class UserService {
     public User update(UserDTO userDTO, Long id_user) {
         User existUser = usersRepository.getReferenceById(id_user);
 
-        if (userDTO.first_name() != null) {
-            existUser.setFirstName(userDTO.first_name());
-        }
+        User sender = usersRepository.findByEmail(SecurityContextHolder.getContext().getAuthentication().getName());
+        if(existUser.equals(sender) || sender.getRole().equals("owner") || sender.getRole().equals("admin")) {
+            if (userDTO.first_name() != null) {
+                existUser.setFirstName(userDTO.first_name());
+            }
 
-        if (userDTO.last_name() != null) {
-            existUser.setLastName(userDTO.last_name());
-        }
+            if (userDTO.last_name() != null) {
+                existUser.setLastName(userDTO.last_name());
+            }
 
-        if (userDTO.email() != null) {
-            existUser.setEmail(userDTO.email());
-        }
+            if (userDTO.email() != null) {
+                existUser.setEmail(userDTO.email());
+            }
 
-        if (userDTO.password() != null) {
-            BCryptPasswordEncoder bCrypt = new BCryptPasswordEncoder();
-            existUser.setPassword(bCrypt.encode(userDTO.password()));
-        }
+            if (userDTO.password() != null) {
+                BCryptPasswordEncoder bCrypt = new BCryptPasswordEncoder();
+                existUser.setPassword(bCrypt.encode(userDTO.password()));
+            }
 
-        return usersRepository.save(existUser);
+            return usersRepository.save(existUser);
+        }   else {
+            throw new UserDoesNotHaveAccessException();
+        }
     }
 
     public boolean delete(Long id) {
@@ -200,8 +201,8 @@ public class UserService {
     }
 
     public User setAdminRole(Long idUser) {
-        if (calledByAdmin()) {
-            User user = getOne(idUser);
+        User user = getOne(idUser);
+        if (calledByAdmin() && !user.getRole().equals("owner")) {
             user.setRole("admin");
             return usersRepository.save(user);
         }
@@ -209,9 +210,29 @@ public class UserService {
     }
 
     public User removeAdminRole(Long idUser) {
-        if (calledByAdmin()) {
-            User user = getOne(idUser);
+        User user = getOne(idUser);
+        User sender = usersRepository.findByEmail(SecurityContextHolder.getContext().getAuthentication().getName());
+
+        if (calledByAdmin() && (!user.getRole().equals("owner") && !user.getRole().equals("admin")) || (sender.getRole().equals("owner") && !user.getRole().equals("owner"))) {
             user.setRole("user");
+            return usersRepository.save(user);
+        }
+        throw new UserDoesNotHaveAccessException();
+    }
+
+    public User blockUser(Long idUser) {
+        User user = usersRepository.getReferenceById(idUser);
+        if (calledByAdmin() && user.getRole().equals("user")) {
+            user.setBlocked(true);
+            return usersRepository.save(user);
+        }
+        throw new UserDoesNotHaveAccessException();
+    }
+
+    public User unblockUser(Long idUser) {
+        User user = usersRepository.getReferenceById(idUser);
+        if (calledByAdmin() && user.getRole().equals("user")) {
+            user.setBlocked(false);
             return usersRepository.save(user);
         }
         throw new UserDoesNotHaveAccessException();
@@ -221,21 +242,4 @@ public class UserService {
         User user = getUserByEmail(SecurityContextHolder.getContext().getAuthentication().getName());
         return user.getRole().equals("admin") || user.getRole().equals("owner");
     }
-
-    public User getUserWhoMadeRequest() {
-        return getUserByEmail(SecurityContextHolder.getContext().getAuthentication().getName());
-    }
-
-    /*public User setImage(Long idUser, MultipartFile file) {
-        User user = getOne(idUser);
-
-        if (calledByAdmin() || getUserWhoMadeRequest().equals(user)) {
-            String filename = imageUploadService.getUniqueFilename(file.getOriginalFilename() + " ");
-            imageUploadService.saveImage(file, filename);
-            user.setImage(filename);
-            return usersRepository.save(user);
-        }   else {
-            throw new UserDoesNotHaveAccessException();
-        }
-    }*/
 }
